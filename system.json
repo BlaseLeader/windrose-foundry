@@ -1,0 +1,34 @@
+{
+  "id": "windrose",
+  "title": "Windrose",
+  "description": "The Windrose system for FoundryVTT!",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": 10,
+    "verified": "10.287",
+    "maximum": 10
+  },
+  "authors": [{
+    "name": "BlazeLeader"
+  }],
+  "esmodules": ["module/windrose.mjs"],
+  "styles": ["css/windrose.css"],
+  "scripts": [],
+  "packs": [],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "gridDistance": 5,
+  "gridUnits": "ft",
+  "primaryTokenAttribute": "health",
+  "secondaryTokenAttribute": "swing",
+  "url": "",
+  "manifest": "",
+  "download": "",
+  "license": "LICENSE.txt",
+  "changelog": "CHANGELOG.md"
+}

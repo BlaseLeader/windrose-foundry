@@ -1,0 +1,58 @@
+{
+  "Actor": {
+    "types": ["character", "npc"],
+    "templates": {
+      "base": {
+        "health": {
+          "value": 10,
+          "min": 0,
+          "max": 10
+        },
+        "swing": {
+          "value": 0,
+          "min": 0,
+          "max": 6
+        },
+        "biography": ""
+      }
+    },
+    "character": {
+      "templates": ["base"],
+      "attributes": {
+        "gift_slots": {
+          "value": 6,
+          "max": 6
+        }
+      },
+      "abilities": {
+        "red": {
+          "value": 0
+        },
+        "blue": {
+          "value": 0
+        },
+        "yellow": {
+          "value": 0
+        }
+      }
+    },
+    "npc": {
+      "templates": ["base"],
+      "cr": 0
+    }
+  },
+  "Item": {
+    "types": ["gift", "seal"],
+    "templates": {
+      "base": {
+        "description": ""
+      }
+    },
+    "gift": {
+      "templates": ["base"]
+    },
+    "seal": {
+      "templates": ["base"]
+    }
+  }
+}
