@@ -8,6 +8,8 @@ import { WindroseItemSheet } from "./sheets/item-sheet.mjs";
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { BOILERPLATE } from "./helpers/config.mjs";
 
+import * as Chat from "./documents/chat.mjs"
+
 /* -------------------------------------------- */
 /*  Init Hook                                   */
 /* -------------------------------------------- */
@@ -23,14 +25,14 @@ Hooks.once('init', async function() {
   };
 
   // Add custom constants for configuration.
-  CONFIG.WINDROSE = WINDROSE;
+  CONFIG.BOILERPLATE = BOILERPLATE;
 
   /**
    * Set an initiative formula for the system
    * @type {String}
    */
   CONFIG.Combat.initiative = {
-    formula: "1d20 + @abilities.dex.mod",
+    formula: "1d20",
     decimals: 2
   };
 
@@ -47,6 +49,8 @@ Hooks.once('init', async function() {
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();
 });
+
+Hooks.on("renderChatLog", (app,html,data) => Chat.addChatListeners(html));
 
 /* -------------------------------------------- */
 /*  Handlebars Helpers                          */

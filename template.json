@@ -8,51 +8,79 @@
           "min": 0,
           "max": 10
         },
-        "swing": {
-          "value": 0,
-          "min": 0,
-          "max": 6
-        },
-        "biography": ""
+        "biography": "",
+        "currentSwingName":"",
+        "showLeveling":false,
+        "automatedMessaging":true,
+        "globalDyeBonus":"",
+        "globalDoBonus":"",
+        "globalRecoverBonus":"",
+        "autoUnlock":true,
+        "autoHealRecover":true
       }
     },
     "character": {
       "templates": ["base"],
       "attributes": {
-        "gift_slots": {
-          "value": 6,
-          "max": 6
-        }
-      },
-      "abilities": {
-        "red": {
+        "experience": {
           "value": 0
         },
-        "blue": {
-          "value": 0
-        },
-        "yellow": {
-          "value": 0
+        "speed": {
+          "value":30
         }
       }
     },
     "npc": {
       "templates": ["base"],
-      "cr": 0
+      "attributes": {
+        "experience": {
+          "value": 0
+        },
+        "speed": {
+          "value":30
+        }
+      }
     }
   },
   "Item": {
-    "types": ["gift", "seal"],
+    "types": ["color", "gift", "giftbonus"],
     "templates": {
       "base": {
         "description": ""
       }
     },
-    "gift": {
-      "templates": ["base"]
+    "color": {
+      "templates": ["base"],
+      "hexColor": "#FFFF00",
+      "value": 0,
+      "wounded": false,
+      "locked": false,
+      "expanded": false,
+      "displayName":"color",
+      "isSwing":false,
+      "swingValue": 0,
+      "disabled":0,
+      "diceSize":"1d6",
+      "internalName":"",
+      "globalBonus":""
+
     },
-    "seal": {
-      "templates": ["base"]
+    "gift":{
+      "templates": ["base"],
+      "isPrimary": false,
+      "showPrimary":false,
+      "showLeveling":false,
+      "isEquipped": false,
+      "expanded": false,
+      "primaryDescription": "",
+      "levelDescription": "",
+      "modifierIDs":[]
+    },
+    "giftbonus":{
+       "enabled":true,
+       "colorID":"",
+       "bonus":"0",
+       "isPrimary":false
     }
   }
 }

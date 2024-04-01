@@ -1,0 +1,43 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <div class="profile-img colorblock-large" style="background-color: {{system.hexColor}};"></div>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Name"/></h1>
+    </div>
+  </header>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="description">Attributes</a>
+    <a class="item" data-tab="attributes">Description</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body">
+
+    {{!-- Description Tab --}}
+    <div class="tab" data-group="primary" data-tab="attributes">
+      {{editor system.description target="system.description" rollData=rollData button=true owner=owner editable=editable}}
+    </div>
+
+    {{!-- Attributes Tab --}}
+    <div class="tab description" data-group="primary" data-tab="description">
+      {{!-- As you add new fields, add them in here! --}}
+    <input type="checkbox" name="system.disabled" {{checked system.disabled}}>
+    <label><b style="position: relative;top: -4px;">Disabled</b></label><br>
+    <label class="resource-label">Color Hex Value</label>
+    <input type="text" name="system.hexColor" value="{{system.hexColor}}" data-dtype="String"/>
+    <label class="resource-label">Attribute Bonus</label>
+    <input type="text" name="system.value" value="{{system.value}}" data-dtype="Number"/>
+    <label class="resource-label">Generic Display Name (for chat messages)</label>
+    <input type="text" name="system.displayName" value="{{system.displayName}}" data-dtype="String"/>
+    <label class="resource-label">Internal Name</label>
+    <input type="text" name="system.internalName" value="{{system.internalName}}" data-dtype="String"/>
+    <label class="resource-label">Custom Dice Size</label>
+    <input type="text" name="system.diceSize" value="{{system.diceSize}}" data-dtype="String"/>
+    <label class="resource-label">Default Bonus</label>
+    <input type="text" name="system.globalBonus" value="{{system.globalBonus}}" data-dtype="String"/>
+    </div>
+  </section>
+
+</form>

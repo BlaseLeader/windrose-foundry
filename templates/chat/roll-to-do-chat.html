@@ -1,0 +1,14 @@
+<div class="message-content">
+    <h1>Roll To Do</h1>
+    <div class="attributeRolls">
+        <div class="colorblock-wide" style="background-color: {{attColor}};">
+            <div>{{d20Roll.total}}</div>
+        </div>
+        <div class="colorblock-small inMessage {{#if color.system.isSwing}}block-swing{{/if}}" title="{{color.system.displayName}}" style="background-color: {{attColor}};">
+            <div>{{colorRoll.total}}</div>
+        </div>
+        {{#if attVal}}<div class="colorattribute" style="color:{{attColor}}">+{{attVal}}</div>{{/if}}
+        {{#if formulaRoll.total}}<div class="colorattribute" title="{{formulaRoll.result}}" style="color:grey">{{formulaString}}</div>{{/if}}
+    </div>
+    <div class="rolltotal">{{finalTotal}}</div>
+</div>

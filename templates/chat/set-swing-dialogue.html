@@ -1,0 +1,14 @@
+<form>
+    <div class="form-group">
+        <label>Attribute</label>
+        <select name="attribute" value="">
+            {{#each colors as |color key|}}
+              <option value={{color._id}} {{#if color.system.isSwing}}selected{{/if}}>{{color.name}} </option>
+            {{/each}}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Value</label>
+        <input type="text" name="bonuses" value="1"/>
+    </div>
+</form>

@@ -1,20 +1,28 @@
 {
   "id": "windrose",
+  "name":"windrose",
   "title": "Windrose",
   "description": "The Windrose system for FoundryVTT!",
-  "version": "1.0.0",
+  "authors": [
+    {
+      "name": "AuRus",
+      "discord": "aurus"
+    }
+  ],
+  "media": [
+    {
+      "type": "setup",
+      "url": "systems/windrose/assets/anvil-bg-sentiment.png",
+      "thumbnail": "systems/windrose/assets/anvil-bg-sentiment.png"
+    }
+  ],
+  "version": "1.0.8",
   "compatibility": {
-    "minimum": 10,
-    "verified": "10.287",
-    "maximum": 10
+    "minimum": 11,
+    "verified": "11.315"
   },
-  "authors": [{
-    "name": "BlazeLeader"
-  }],
-  "esmodules": ["module/windrose.mjs"],
-  "styles": ["css/windrose.css"],
-  "scripts": [],
-  "packs": [],
+  "esmodules": ["module/sentiment.mjs"],
+  "styles": ["css/sentiment.css"],
   "languages": [
     {
       "lang": "en",
@@ -22,13 +30,22 @@
       "path": "lang/en.json"
     }
   ],
+  "packs": [
+    {
+      "name": "colors",
+      "label": "Standard Colors",
+      "system":"windrose",
+      "type": "Item",
+      "path": "packs/standard-colors.db",
+      "private": false,
+      "flags":{}
+    }
+  ],
+  "packFolders": [],
+  "socket": false,
+  "background": "systems/windrose/assets/anvil-bg-sentiment.png",
+  "url":"https://github.com/djc6460/sentiment",
   "gridDistance": 5,
   "gridUnits": "ft",
-  "primaryTokenAttribute": "health",
-  "secondaryTokenAttribute": "swing",
-  "url": "",
-  "manifest": "",
-  "download": "",
-  "license": "LICENSE.txt",
-  "changelog": "CHANGELOG.md"
+  "primaryTokenAttribute": "health"
 }

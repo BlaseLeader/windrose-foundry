@@ -1,0 +1,13 @@
+<form>
+    <div class="form-group">
+        <label>Bonuses (ex 1d6+1)</label>
+        <input type="text" name="bonuses" value="{{defaultBonus}}"/>
+        <label>Attribute</label>
+        <select name="attribute" value="">
+            <option value="wild">Wild</option>
+            {{#each colors as |color key|}}
+              <option value={{color._id}} {{#if color.system.isSwing}}selected{{/if}}>{{color.name}} </option>
+            {{/each}}
+        </select>
+    </div>
+</form>

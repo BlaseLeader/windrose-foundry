@@ -19,22 +19,21 @@
           <input type="text" name="system.health.value" value="{{system.health.value}}" data-dtype="Number"/>
           <span> / </span>
           <input type="text" name="system.health.max" value="{{system.health.max}}" data-dtype="Number"/>
-          </div>
+          </div>{{#if system.showLeveling}}<a class="item-spendxponhp" title="Increase HP by 1"><i class="fas fa-up"></i> (XP: {{system.xpToLevelHP}})</a>{{/if}}
         </div>
 
         <div class="resource flex-group-center">
-          <label for="system.power.value" class="resource-label">Power</label>
+          <label for="system.attributes.experience.value" class="resource-label">Experience</label>
           <div class="resource-content flexrow flex-center flex-between">
-          <input type="text" name="system.power.value" value="{{system.power.value}}" data-dtype="Number"/>
-          <span> / </span>
-          <input type="text" name="system.power.max" value="{{system.power.max}}" data-dtype="Number"/>
+          <input type="text" name="system.attributes.experience.value" value="{{system.attributes.experience.value}}" data-dtype="Number"/>
           </div>
         </div>
-
+        
         <div class="resource flex-group-center">
-          <label for="system.attributes.level.value" class="resource-label">Level</label>
+          <label for="system.attributes.speed.value" class="resource-label">Speed</label>
           <div class="resource-content flexrow flex-center flex-between">
-          <input type="text" name="system.attributes.level.value" value="{{system.attributes.level.value}}" data-dtype="Number"/>
+            <input type="text" name="system.attributes.speed.value" value="{{system.attributes.speed.value}}" data-dtype="Number"/>
+          </div>{{#if system.showLeveling}}<a class="item-spendxponspeed" title="Increase speed by 10ft."><i class="fas fa-up"></i> (XP: 10)</a>{{/if}}
           </div>
         </div>
 
@@ -45,63 +44,50 @@
   {{!-- Sheet Tab Navigation --}}
   <nav class="sheet-tabs tabs" data-group="primary">
     {{!-- Default tab is specified in actor-sheet.mjs --}}
-    <a class="item" data-tab="features">Features</a>
+    <a class="item" data-tab="summary">Summary</a>
+    <a class="item" data-tab="gifts">Gifts</a>
     <a class="item" data-tab="description">Description</a>
-    <a class="item" data-tab="items">Items</a>
-    <a class="item" data-tab="spells">Spells</a>
-    <a class="item" data-tab="effects">Effects</a>
+    <a class="item" data-tab="settings">Settings</a>
   </nav>
 
   {{!-- Sheet Body --}}
   <section class="sheet-body">
 
-    {{!-- Owned Features Tab --}}
-    <div class="tab features" data-group="primary" data-tab="features">
-      <section class="grid grid-3col">
-        <aside class="sidebar">
-
-          {{!-- The grid classes are defined in scss/global/_grid.scss. To use,
-          use both the "grid" and "grid-Ncol" class where "N" can be any number
-          from 1 to 12 and will create that number of columns.  --}}
-          <div class="abilities flexcol">
-            {{#each system.abilities as |ability key|}}
-            <div class="ability flexrow flex-group-center">
-              <label for="system.abilities.{{key}}.value" class="resource-label rollable flexlarge align-left" data-roll="d20+@abilities.{{key}}.mod" data-label="{{ability.label}}">{{ability.label}}</label>
-              <input type="text" name="system.abilities.{{key}}.value" value="{{ability.value}}" data-dtype="Number"/>
-              <span class="ability-mod rollable" data-roll="d20+@abilities.{{key}}.mod" data-label="{{ability.label}}">{{numberFormat ability.mod decimals=0 sign=true}}</span>
-            </div>
-            {{/each}}
-          </div>
-        </aside>
-
-        {{!-- For the main features list, span the right two columns --}}
-        <section class="main grid-span-2">
-          {{!-- This is a Handlebars partial. They're stored in the `/parts` folder next to this sheet, and defined in module/helpers/templates.mjs --}}
-          {{> "systems/windrose/templates/actor/parts/actor-features.html"}}
-        </section>
-
-      </section>
+    {{!-- Summary Tab --}}
+    {{!-- Color Display--}}
+    <div class="tab summary" data-group="primary" data-tab="summary">
+      {{> "systems/windrose/templates/actor/parts/actor-summary.html"}}
+    </div>
+    {{!-- Owned Items Tab --}}
+    <div class="tab gifts" data-group="primary" data-tab="gifts">
+       {{> "systems/windrose/templates/actor/parts/actor-gifts.html"}}
     </div>
 
     {{!-- Biography Tab --}}
     <div class="tab biography" data-group="primary" data-tab="description">
-      {{!-- If you want TinyMCE editors to output inline rolls when rendered, you need to pass the actor's roll data to the rollData property. --}}
+      {{!-- If you want TinyMCE editors to output inline rolls when rendered, you need to pass the actors roll data to the rollData property. --}}
       {{editor system.biography target="system.biography" rollData=rollData button=true owner=owner editable=editable}}
     </div>
 
-    {{!-- Owned Items Tab --}}
-    <div class="tab items" data-group="primary" data-tab="items">
-       {{> "systems/windrose/templates/actor/parts/actor-items.html"}}
+    {{!-- Settings Tab --}}
+    <div class="tab settings" data-group="primary" data-tab="settings">
+      <input type="checkbox" name="system.showLeveling" {{checked system.showLeveling}}>
+      <label><b style="position: relative;top: -4px;">Show Leveling</b></label><br>
+      <input type="checkbox" name="system.automatedMessaging" {{checked system.automatedMessaging}}>
+      <label><b style="position: relative;top: -4px;">Show Automated Messages (Lock/Wound)</b></label><br>
+      <input type="checkbox" name="system.autoUnlock" {{checked system.autoUnlock}}>
+      <label><b style="position: relative;top: -4px;">Automatically Unlock on Dye</b></label><br>
+      <input type="checkbox" name="system.autoHealRecover" {{checked system.autoHealRecover}}>
+      <label><b style="position: relative;top: -4px;">Automatically Heal on Recover</b></label><br>
+      <label class="resource-label">Default Do Bonus</label>
+      <input type="text" name="system.globalDoBonus" value="{{system.globalDoBonus}}" data-dtype="String"/>
+      <label class="resource-label">Default Dye Bonus</label>
+      <input type="text" name="system.globalDyeBonus" value="{{system.globalDyeBonus}}" data-dtype="String"/>
+      <label class="resource-label">Default Recover Bonus</label>
+      <input type="text" name="system.globalRecoverBonus" value="{{system.globalRecoverBonus}}" data-dtype="String"/>
     </div>
 
-    {{!-- Owned Spells Tab --}}
-    <div class="tab spells" data-group="primary" data-tab="spells">
-      {{> "systems/windrose/templates/actor/parts/actor-spells.html"}}
-    </div>
 
-    {{!-- Active Effects Tab --}}
-    <div class="tab effects flexcol" data-group="primary" data-tab="effects">
-      {{> "systems/windrose/templates/actor/parts/actor-effects.html"}}
     </div>
 
   </section>

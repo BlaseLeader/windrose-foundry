@@ -1,0 +1,27 @@
+<div class="message-content">
+    <h1>Roll To Recover</h1>
+    <div class="attributeRolls">
+    {{#each colorArray as |color key|}}
+    <a class="btn-selectSwing" data-owner-id="{{../ownerId}}" data-token-id="{{../tokenId}}" data-item-id="{{color.colorItem.id}}" data-rollval="{{color.roll._total}}" data-rolltotal="{{../finalTotal}}">
+        <div class="colorblock-small inMessage {{#if color.colorItem.system.isSwing}}block-swing{{/if}}" title="{{color.colorItem.system.displayName}} [{{color.colorItem.system.value}}]" style="background-color: {{color.colorItem.system.hexColor}};">
+            <div>{{color.roll.total}}</div>
+        </div>
+    </a>
+    {{/each}}
+    {{#each colorLockArray as |color key|}}
+    <div class="colorblock-small inMessage" title="{{color.system.displayName}} [L]" style="background-color: {{color.system.hexColor}};">
+        <div>L</div>
+    </div>
+    {{/each}}
+    {{#each colorWoundArray as |color key|}}
+    <div class="colorblock-small inMessage" title="{{color.system.displayName}}" style="background-color: {{color.system.hexColor}};">
+        <div>W</div>
+    </div>
+    {{/each}}
+    <!-- {{#if attVal}}<div class="colorattribute" style="color:{{attColor}}">+{{attVal}}</div>{{/if}} this applies the attribute value a second time -->
+    {{#if formulaRoll.total}}<div class="colorattribute" title="{{formulaRoll.result}}" style="color:grey">{{formulaString}}</div>{{/if}}
+    </div>
+    <div class="rolltotal">{{finalTotal}}</div>
+    <div class="smalltext">Click a color to set or change your swing.</div>
+    {{#if didUnlock}}<div class="smalltext">Locked dice have been unlocked</div>{{/if}}
+</div>

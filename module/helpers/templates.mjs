@@ -7,9 +7,7 @@
   return loadTemplates([
 
     // Actor partials.
-    "systems/windrose/templates/actor/parts/actor-features.html",
-    "systems/windrose/templates/actor/parts/actor-items.html",
-    "systems/windrose/templates/actor/parts/actor-spells.html",
-    "systems/windrose/templates/actor/parts/actor-effects.html",
+    "systems/windrose/templates/actor/parts/actor-gifts.html",
+    "systems/windrose/templates/actor/parts/actor-summary.html",
   ]);
 };

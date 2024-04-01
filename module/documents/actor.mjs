@@ -13,6 +13,36 @@ export class WindroseActor extends Actor {
     super.prepareData();
   }
 
+  async _preCreate(data, options, user) {
+    if ( (await super._preCreate(data, options, user)) === false ) return false;
+
+    // Configure prototype token settings
+    const prototypeToken = {};
+    if ( this.type === "character" ) Object.assign(prototypeToken, {actorLink: true});
+    this.updateSource({ prototypeToken });
+  }
+  //Create a new actor - When creating an actor set basics including tokenlink, bars, displays sight
+  static async create (data, options = {}) {
+    if (data.type === 'character') {
+      data.prototypeToken = mergeObject(data.prototypeToken || {}, {
+        actorLink: true,
+        disposition: 1,
+        //displayName: CONST.TOKEN_DISPLAY_MODES.ALWAYS,
+        //displayBars: CONST.TOKEN_DISPLAY_MODES.ALWAYS,
+        sight: {
+          enabled: true
+        },
+        detectionModes: [{
+          id: 'basicSight',
+          range: 30,
+          enabled: true
+        }]
+      })
+    } 
+    let actor = await super.create(data, options)
+    return 
+}
+
   /** @override */
   prepareBaseData() {
     // Data modifications in this step occur before processing embedded
@@ -45,14 +75,7 @@ export class WindroseActor extends Actor {
   _prepareCharacterData(actorData) {
     if (actorData.type !== 'character') return;
 
-    // Make modifications to data here. For example:
     const systemData = actorData.system;
-
-    // Loop through ability scores, and add their modifiers to our sheet output.
-    for (let [key, ability] of Object.entries(systemData.abilities)) {
-      // Calculate the modifier using d20 rules.
-      ability.mod = Math.floor((ability.value - 10) / 2);
-    }
   }
 
   /**
@@ -61,9 +84,7 @@ export class WindroseActor extends Actor {
   _prepareNpcData(actorData) {
     if (actorData.type !== 'npc') return;
 
-    // Make modifications to data here. For example:
     const systemData = actorData.system;
-    systemData.xp = (systemData.cr * systemData.cr) * 100;
   }
 
   /**

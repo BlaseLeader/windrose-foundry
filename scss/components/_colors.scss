@@ -1,0 +1,162 @@
+.color-row {
+    border-style: solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: #b6b49b;
+    padding-right: 4px;
+}
+
+.flexrow.flex-group-center.color-row-expanded {
+    margin-left: 43px;
+    padding-right: 100px;
+    font-size: 12px;
+    border-style: solid;
+    border-color: #b6b49b;
+    border-width: 0px 1px 1px 1px;
+}
+
+.item.flexrow.flex-group-center.color-row-expanded:last-child{
+    border-bottom: none;
+}
+
+.flexrow.flex-group-center.color-row-expanded:last-child{
+    border-style: solid;
+    border-color: #b6b49b;
+    border-width: 0px 1px 1px 1px;
+}
+
+.editor {
+    min-height: 25px;
+}
+
+.editor-minHeight {
+    min-height: 50px;
+    display: "flex";
+}
+
+.color-controls {
+    display: contents;
+    padding-right: 4px;
+}
+
+$size: 40px;
+.colorblock-small
+{
+    height: $size;
+    width: $size;
+    max-height: $size;
+    max-width: $size;
+    border-style: solid;
+    border-radius: 5px;
+} 
+
+.disabled {
+    opacity: 0.2;
+}
+
+.colorblock-small.block-swing.floatingSwing {
+    display: block;
+    position: relative;
+    left: 38px;
+    top: -39px;
+}
+
+.item-color-create {
+    text-align: right;
+    display: block;
+    margin-right: 10px;
+}
+
+.rollButtons {
+    place-items: center;
+}
+
+.sheet-button {
+    background-color: #c3c2aa;
+    color: #333333;
+    padding: 2px 6px 2px 6px;
+    border-top: 1px solid #CCCCCC;
+    border-right: 1px solid #333333;
+    border-bottom: 1px solid #333333;
+    border-left: 1px solid #CCCCCC;
+    width: 125px;
+    display: flex;
+}
+
+.colorblock-wide
+{
+    height: 40px;
+    width: 60px;
+    max-height: 40px;
+    max-width: 60px;
+    border-style: solid;
+    display:inline-block;
+    border-radius: 16px;
+} 
+.colorblock-wide div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: bold;
+    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+}
+
+.colorblock-small.block-swing
+{
+    border-style: double;
+}
+
+.colorblock-small.inMessage
+{
+    display:inline-block;
+}
+
+.colorattribute {
+    display:inline-block;
+    font-size: 30px;
+    font-weight: bold;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+.colorblock-small div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: bold;
+    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+}
+.attributeRolls
+{
+    text-align: center;
+    margin: auto;
+    margin-top: 5px;
+}
+
+.colorblock-large
+{
+    height: 100px;
+    width: 100px;
+    max-height: 100px;
+    max-width: 100px;
+    border-style: solid;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 100px;
+    flex: 0 0 100px;
+    height: 100px;
+}
+
+.rolltotal
+{
+    font-size:40px;
+    width: 100px;
+    text-align: center;
+    border: groove;
+    margin: auto;
+    margin-top: 5px;
+}
+
+.smalltext
+{
+    font-size: 10px;
+}
