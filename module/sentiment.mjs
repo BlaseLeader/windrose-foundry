@@ -7,21 +7,23 @@ import { WindroseItemSheet } from "./sheets/item-sheet.mjs";
 // Import helper/utility classes and constants.
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { BOILERPLATE } from "./helpers/config.mjs";
+import * as Swing from "./helpers/swing.mjs";
 
-import * as Chat from "./documents/chat.mjs"
+// import { Application, Assets, Sprite } from "pixi.js";
+
+import * as Chat from "./documents/chat.mjs";
 
 /* -------------------------------------------- */
 /*  Init Hook                                   */
 /* -------------------------------------------- */
 
-Hooks.once('init', async function() {
-
+Hooks.once("init", async function () {
   // Add utility classes to the global game object so that they're more easily
   // accessible in global contexts.
   game.windrose = {
     WindroseActor,
     WindroseItem,
-    rollItemMacro
+    rollItemMacro,
   };
 
   // Add custom constants for configuration.
@@ -33,7 +35,7 @@ Hooks.once('init', async function() {
    */
   CONFIG.Combat.initiative = {
     formula: "1d20",
-    decimals: 2
+    decimals: 2,
   };
 
   // Define custom Document classes
@@ -50,24 +52,24 @@ Hooks.once('init', async function() {
   return preloadHandlebarsTemplates();
 });
 
-Hooks.on("renderChatLog", (app,html,data) => Chat.addChatListeners(html));
+Hooks.on("renderChatLog", (app, html, data) => Chat.addChatListeners(html));
 
 /* -------------------------------------------- */
 /*  Handlebars Helpers                          */
 /* -------------------------------------------- */
 
 // If you need to add Handlebars helpers, here are a few useful examples:
-Handlebars.registerHelper('concat', function() {
-  var outStr = '';
+Handlebars.registerHelper("concat", function () {
+  var outStr = "";
   for (var arg in arguments) {
-    if (typeof arguments[arg] != 'object') {
+    if (typeof arguments[arg] != "object") {
       outStr += arguments[arg];
     }
   }
   return outStr;
 });
 
-Handlebars.registerHelper('toLowerCase', function(str) {
+Handlebars.registerHelper("toLowerCase", function (str) {
   return str.toLowerCase();
 });
 
@@ -75,7 +77,7 @@ Handlebars.registerHelper('toLowerCase', function(str) {
 /*  Ready Hook                                  */
 /* -------------------------------------------- */
 
-Hooks.once("ready", async function() {
+Hooks.once("ready", async function () {
   // Wait to register hotbar drop hook on ready so that modules could register earlier if they want to
   Hooks.on("hotbarDrop", (bar, data, slot) => createItemMacro(data, slot));
 });
@@ -94,22 +96,26 @@ Hooks.once("ready", async function() {
 async function createItemMacro(data, slot) {
   // First, determine if this is a valid owned item.
   if (data.type !== "Item") return;
-  if (!data.uuid.includes('Actor.') && !data.uuid.includes('Token.')) {
-    return ui.notifications.warn("You can only create macro buttons for owned Items");
+  if (!data.uuid.includes("Actor.") && !data.uuid.includes("Token.")) {
+    return ui.notifications.warn(
+      "You can only create macro buttons for owned Items"
+    );
   }
   // If it is, retrieve it based on the uuid.
   const item = await Item.fromDropData(data);
 
   // Create the macro command using the uuid.
   const command = `game.windrose.rollItemMacro("${data.uuid}");`;
-  let macro = game.macros.find(m => (m.name === item.name) && (m.command === command));
+  let macro = game.macros.find(
+    (m) => m.name === item.name && m.command === command
+  );
   if (!macro) {
     macro = await Macro.create({
       name: item.name,
       type: "script",
       img: item.img,
       command: command,
-      flags: { "windrose.itemMacro": true }
+      flags: { "windrose.itemMacro": true },
     });
   }
   game.user.assignHotbarMacro(macro, slot);
@@ -124,18 +130,141 @@ async function createItemMacro(data, slot) {
 function rollItemMacro(itemUuid) {
   // Reconstruct the drop data so that we can load the item.
   const dropData = {
-    type: 'Item',
-    uuid: itemUuid
+    type: "Item",
+    uuid: itemUuid,
   };
   // Load the item from the uuid.
-  Item.fromDropData(dropData).then(item => {
+  Item.fromDropData(dropData).then((item) => {
     // Determine if the item loaded and if it's an owned item.
     if (!item || !item.parent) {
       const itemName = item?.name ?? itemUuid;
-      return ui.notifications.warn(`Could not find item ${itemName}. You may need to delete and recreate this macro.`);
+      return ui.notifications.warn(
+        `Could not find item ${itemName}. You may need to delete and recreate this macro.`
+      );
     }
 
     // Trigger the item roll
     item.roll();
   });
 }
+
+//
+Hooks.on("hoverToken", async (object, controlled) => {
+  // console.log("hover token", object.document.getFlag("token-auras", "aura1"), object.actor.system.currentSwingValue, object.actor.system.currentSwingName, object.actor.system.currentSwingColor)
+  if (controlled) {
+    // on hover
+    // console.log("onHover");
+    var swingValue = object.layer.getChildByName(object.id);
+    swingValue.visible = true;
+    // console.log("swingValue", swingValue);
+  } else {
+    // on de-hover
+    // console.log("offHover");
+    var swingValue = object.layer.getChildByName(object.id);
+    swingValue.visible = false;
+    // console.log("swingValue", swingValue);
+  }
+});
+
+// also need to figure out how to do this for already placed tokens (do on init?)
+Hooks.on("createToken", async (doc, options, userId) => {
+  const textElement = new PIXI.Text();
+  var swing = doc.actor.getSwing();
+  if (swing) {
+    Swing.setColoredSwing(
+      doc,
+      swing.system.swingValue,
+      swing.system.hexColor,
+      textElement
+    );
+  } else {
+    Swing.setColorless(doc, textElement);
+  }
+});
+
+Hooks.on("canvasReady", async (canvas) => {
+  console.log("canvasReady", canvas.tokens.objects.children);
+
+  //loop through all tokens on canvas to update swings
+  canvas.tokens.objects.children.forEach((token) => {
+    var textElement = new PIXI.Text();
+    let swing = token.actor.getSwing();
+
+    //if character has an active swing, show it
+    if (swing) {
+      Swing.setColoredSwing(
+        token.document,
+        swing.system.swingValue,
+        swing.system.hexColor,
+        textElement
+      );
+    } else {
+      Swing.setColorless(token.document, textElement);
+    }
+  });
+});
+
+// Hooks.on("updateItem", console.log);
+// Hooks.on("updateItem", async (doc, change) => {
+//   //get all tokens associated with the actor on the item
+//   const actor = doc.actor;
+//   const tokens = actor.getActiveTokens();
+
+//   //loop through them and get their aura and swing, then assign them as appropriate
+//   tokens.forEach((token) => {
+//     console.log("token doc", token.document)
+//     let swing = token.actor.getSwing();
+//     var textElement = token.layer.getChildByName(token.id);
+//     if (doc.type === "color") {
+//       console.log("swing", swing)
+//       if (swing) {
+//         Swing.setColoredSwing(token.document, swing.system.swingValue, swing.system.hexColor, textElement);
+//       } else {
+//         Swing.setColorless(token.document, textElement);
+//       }
+//     }
+//   });
+// });
+
+Hooks.on("updateActor", console.log);
+Hooks.on("updateActor", async (doc, change) => {
+  //get all tokens associated with the actor
+  console.log("updateActor", change);
+  const tokens = doc.getActiveTokens();
+
+  //loop through them and get their aura and swing, then assign them as appropriate
+  tokens.forEach((token) => {
+    var textElement = token.layer.getChildByName(token.id);
+    if (
+      !!change.system.currentSwingValue ||
+      !!change.system.currentSwingColor
+    ) {
+      console.log(
+        change.system.currentSwingValue,
+        change.system.currentSwingColor
+      );
+      const swingVal = !!change.system.currentSwingValue
+        ? change.system.currentSwingValue
+        : doc.system.currentSwingValue;
+      const swingColor = !!change.system.currentSwingColor
+        ? change.system.currentSwingColor
+        : doc.system.currentSwingColor;
+      console.log(swingVal, swingColor);
+      Swing.setColoredSwing(token.document, swingVal, swingColor, textElement);
+    } else {
+      Swing.setColorless(token.document, textElement);
+    }
+    // }
+  });
+});
+
+Hooks.on("updateToken", async (doc, updatedValues) => {
+  var swingVal = doc.layer.getChildByName(doc.id);
+  swingVal.x = updatedValues.x ? updatedValues.x : doc.x;
+  swingVal.y = updatedValues.y ? updatedValues.y : doc.y;
+});
+
+Hooks.on("deleteToken", async (doc) => {
+  //cleanup
+  doc.layer.getChildByName(doc.id).destroy();
+});

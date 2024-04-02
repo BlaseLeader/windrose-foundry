@@ -129,4 +129,21 @@ export class WindroseActor extends Actor {
     // Process additional NPC data here.
   }
 
+  getSwing() {
+    //for loop instead of for each so it can return early
+    for (const element of this.items) {
+      if (element.type === "color") {
+        if (element.system.isSwing) {
+          console.log("returning value from getSwing")
+          return element;
+        }
+      }
+    }
+
+    return null
+  
+  }
+
 }
+
+

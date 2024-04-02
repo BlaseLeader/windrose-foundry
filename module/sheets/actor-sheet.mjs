@@ -269,7 +269,6 @@ export class WindroseActorSheet extends ActorSheet {
     let selectedColorID = userInput.selectedColor;
 
     let color = actor.items.get(selectedColorID);
-    // console.log("initial color", color)
     let colorName = "";
     if (color) {
       colorArray.forEach((element) => {
@@ -279,13 +278,11 @@ export class WindroseActorSheet extends ActorSheet {
       });
       color.update({ "system.isSwing": true, "system.swingValue": swing });
       if (color.system.internalName != "") {
-        actor.update({ "system.currentSwingName": color.system.internalName });
+        actor.update({ "system.currentSwingName": color.system.internalName, 'system.currentSwingValue': swing,  'system.currentSwingColor': color.system.hexColor });
       } else {
-        actor.update({ "system.currentSwingName": color.name });
+        actor.update({ "system.currentSwingName": color.system.displayName, 'system.currentSwingValue': swing,  'system.currentSwingColor': color.system.hexColor });
       }
-      colorName = color.name;
-      // console.log("end color", color)
-      // issue is that displayName is never set
+      colorName = color.system.displayName;
     } else {
       system.log("Error: Color not found");
       return;
@@ -296,6 +293,7 @@ export class WindroseActorSheet extends ActorSheet {
       speaker: ChatMessage.getSpeaker(),
       content: `${actor.name} set their Swing to ${colorName} [${swing}]`,
     });
+
     return;
   }
 
@@ -712,7 +710,8 @@ export class WindroseActorSheet extends ActorSheet {
     if (currentXP >= 10) {
       this.actor.update({
         "system.attributes.experience.value": currentXP - 10,
-        "system.attributes.speed.value": this.actor.system.attributes.speed.value + 10,
+        "system.attributes.speed.value":
+          this.actor.system.attributes.speed.value + 10,
       });
 
       console.log(this.actor);
@@ -734,7 +733,7 @@ export class WindroseActorSheet extends ActorSheet {
       item.update({ "system.locked": item.system.locked });
       if (item.system.locked && item.system.isSwing) {
         item.update({ "system.isSwing": false });
-        this.actor.update({ "system.currentSwingName": "none" });
+        this.actor.update({ "system.currentSwingName": "none", 'system.currentSwingValue': null, 'system.currentSwingColor': null });
       }
     }
     let message = "";
@@ -781,7 +780,7 @@ export class WindroseActorSheet extends ActorSheet {
     const item = this.actor.items.get(itemId);
     if (item) {
       item.update({ "system.isSwing": false });
-      this.actor.update({ "system.currentSwingName": "none" });
+      this.actor.update({ "system.currentSwingName": "none", 'system.currentSwingValue': null, 'system.currentSwingColor': null});
     }
 
     CreateAutomatedMessage(this.actor, "Swing Dropped");
@@ -840,7 +839,7 @@ export class WindroseActorSheet extends ActorSheet {
       item.update({ "system.wounded": item.system.wounded });
       if (item.system.wounded && item.system.isSwing) {
         item.update({ "system.isSwing": false });
-        this.actor.update({ "system.currentSwingName": "none" });
+        this.actor.update({ "system.currentSwingName": "none", 'system.currentSwingValue': null, 'system.currentSwingColor': null });
       }
     }
     let message = "";

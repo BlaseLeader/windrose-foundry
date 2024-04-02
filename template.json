@@ -10,13 +10,14 @@
         },
         "biography": "",
         "currentSwingName":"",
+        "currentSwingValue": null,
+        "currentSwingColor": null,
         "showLeveling":false,
         "automatedMessaging":true,
         "globalDyeBonus":"",
         "globalDoBonus":"",
         "globalRecoverBonus":"",
-        "autoUnlock":true,
-        "autoHealRecover":true
+        "autoUnlock":true,        "autoHealRecover":true
       }
     },
     "character": {
