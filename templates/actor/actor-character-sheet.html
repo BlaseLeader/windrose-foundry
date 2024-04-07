@@ -8,7 +8,7 @@
       {{!-- The grid classes are defined in scss/global/_grid.scss. To use,
       use both the "grid" and "grid-Ncol" class where "N" can be any number
       from 1 to 12 and will create that number of columns.  --}}
-      <div class="resources grid grid-3col">
+      <div class="resources grid grid-4col">
 
         {{!-- "flex-group-center" is also defined in the _grid.scss file
         and it will add a small amount of padding, a border, and will
@@ -23,6 +23,15 @@
         </div>
 
         <div class="resource flex-group-center">
+          <label for="system.aura.value" class="resource-label">Aura</label>
+          <div class="resource-content flexrow flex-center flex-between">
+          <input type="text" name="system.aura.value" value="{{system.aura.value}}" data-dtype="Number"/>
+          <span> / </span>
+          <input type="text" name="system.aura.max" value="{{system.aura.max}}" data-dtype="Number"/>
+          </div>
+        </div>
+
+        <div class="resource flex-group-center">
           <label for="system.attributes.experience.value" class="resource-label">Experience</label>
           <div class="resource-content flexrow flex-center flex-between">
           <input type="text" name="system.attributes.experience.value" value="{{system.attributes.experience.value}}" data-dtype="Number"/>
@@ -33,7 +42,7 @@
           <label for="system.attributes.speed.value" class="resource-label">Speed</label>
           <div class="resource-content flexrow flex-center flex-between">
             <input type="text" name="system.attributes.speed.value" value="{{system.attributes.speed.value}}" data-dtype="Number"/>
-          </div>{{#if system.showLeveling}}<a class="item-spendxponspeed" title="Increase speed by 10ft."><i class="fas fa-up"></i> (XP: 10)</a>{{/if}}
+          </div>{{#if system.showLeveling}}<a class="item-spendxponspeed" title="Increase speed by 5ft."><i class="fas fa-up"></i> (XP: 5)</a>{{/if}}
           </div>
         </div>
 
@@ -79,6 +88,8 @@
       <label><b style="position: relative;top: -4px;">Automatically Unlock on Dye</b></label><br>
       <input type="checkbox" name="system.autoHealRecover" {{checked system.autoHealRecover}}>
       <label><b style="position: relative;top: -4px;">Automatically Heal on Recover</b></label><br>
+      <input type="checkbox" name="system.autoPulseRoll" {{checked system.autoPulseRoll}}>
+      <label><b style="position: relative;top: -4px;">Automatically Roll Pulse at Start of Round(WIP)</b></label><br>
       <label class="resource-label">Default Do Bonus</label>
       <input type="text" name="system.globalDoBonus" value="{{system.globalDoBonus}}" data-dtype="String"/>
       <label class="resource-label">Default Dye Bonus</label>

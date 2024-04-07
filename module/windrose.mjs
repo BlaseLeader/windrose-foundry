@@ -150,19 +150,14 @@ function rollItemMacro(itemUuid) {
 
 //
 Hooks.on("hoverToken", async (object, controlled) => {
-  // console.log("hover token", object.document.getFlag("token-auras", "aura1"), object.actor.system.currentSwingValue, object.actor.system.currentSwingName, object.actor.system.currentSwingColor)
   if (controlled) {
     // on hover
-    // console.log("onHover");
     var swingValue = object.layer.getChildByName(object.id);
     swingValue.visible = true;
-    // console.log("swingValue", swingValue);
   } else {
     // on de-hover
-    // console.log("offHover");
     var swingValue = object.layer.getChildByName(object.id);
     swingValue.visible = false;
-    // console.log("swingValue", swingValue);
   }
 });
 
@@ -183,11 +178,11 @@ Hooks.on("createToken", async (doc, options, userId) => {
 });
 
 Hooks.on("canvasReady", async (canvas) => {
-  console.log("canvasReady", canvas.tokens.objects.children);
+  await PIXI.Assets.load("https://pixijs.com/assets/bitmap-font/desyrel.xml");
 
   //loop through all tokens on canvas to update swings
   canvas.tokens.objects.children.forEach((token) => {
-    var textElement = new PIXI.Text();
+    let textElement = new PIXI.Text();
     let swing = token.actor.getSwing();
 
     //if character has an active swing, show it
@@ -204,62 +199,43 @@ Hooks.on("canvasReady", async (canvas) => {
   });
 });
 
-// Hooks.on("updateItem", console.log);
-// Hooks.on("updateItem", async (doc, change) => {
-//   //get all tokens associated with the actor on the item
-//   const actor = doc.actor;
-//   const tokens = actor.getActiveTokens();
-
-//   //loop through them and get their aura and swing, then assign them as appropriate
-//   tokens.forEach((token) => {
-//     console.log("token doc", token.document)
-//     let swing = token.actor.getSwing();
-//     var textElement = token.layer.getChildByName(token.id);
-//     if (doc.type === "color") {
-//       console.log("swing", swing)
-//       if (swing) {
-//         Swing.setColoredSwing(token.document, swing.system.swingValue, swing.system.hexColor, textElement);
-//       } else {
-//         Swing.setColorless(token.document, textElement);
-//       }
-//     }
-//   });
-// });
-
-Hooks.on("updateActor", console.log);
 Hooks.on("updateActor", async (doc, change) => {
   //get all tokens associated with the actor
-  console.log("updateActor", change);
   const tokens = doc.getActiveTokens();
 
+  if (change.system.currentSwingValue === undefined && change.system.currentSwingColor === undefined)
+  {
+    return;
+  }
+
   //loop through them and get their aura and swing, then assign them as appropriate
-  tokens.forEach((token) => {
+  for (let token of tokens) {
     var textElement = token.layer.getChildByName(token.id);
-    if (
-      !!change.system.currentSwingValue ||
-      !!change.system.currentSwingColor
-    ) {
-      console.log(
-        change.system.currentSwingValue,
-        change.system.currentSwingColor
-      );
-      const swingVal = !!change.system.currentSwingValue
+    if (change.system.currentSwingValue || change.system.currentSwingColor) {
+      const swingVal = change.system.currentSwingValue
         ? change.system.currentSwingValue
         : doc.system.currentSwingValue;
-      const swingColor = !!change.system.currentSwingColor
+      const swingColor = change.system.currentSwingColor
         ? change.system.currentSwingColor
         : doc.system.currentSwingColor;
-      console.log(swingVal, swingColor);
       Swing.setColoredSwing(token.document, swingVal, swingColor, textElement);
     } else {
       Swing.setColorless(token.document, textElement);
     }
     // }
-  });
+  };
 });
 
 Hooks.on("updateToken", async (doc, updatedValues) => {
   var swingVal = doc.layer.getChildByName(doc.id);
+  if (updatedValues.width || updatedValues.height) {
+    Swing.setColoredSwing(
+      doc,
+      doc.actor.system.currentSwingValue,
+      doc.actor.system.currentSwingColor,
+      swingVal
+    );
+  }
   swingVal.x = updatedValues.x ? updatedValues.x : doc.x;
   swingVal.y = updatedValues.y ? updatedValues.y : doc.y;
 });
@@ -267,4 +243,23 @@ Hooks.on("updateToken", async (doc, updatedValues) => {
 Hooks.on("deleteToken", async (doc) => {
   //cleanup
   doc.layer.getChildByName(doc.id).destroy();
+});
+
+// pulse roll
+Hooks.on("updateCombat", async (doc, changes) => {
+  if (changes.round) {
+
+    for (let combatant of doc.combatants)
+    {
+      await Swing.DropSwing(combatant.actor)
+    }
+
+    doc.combatants.forEach((combatant) => {
+      if (combatant.token.disposition === 1) {
+        combatant.actor.sheet._onRollToDye(null, null, true);
+      } else {
+        combatant.actor.sheet._onRollToDye(null, "gmroll", true);
+      }
+    });
+  }
 });

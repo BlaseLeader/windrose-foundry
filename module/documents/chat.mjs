@@ -12,62 +12,72 @@ function onSelectSwing(event) {
     //This get the actor document via id.
     actor = game.actors.get(card.dataset.ownerId);
   }
-  let color = actor.items.get(card.dataset.itemId);
+  let selectedColor = actor.items.get(card.dataset.itemId);
   let total = card.dataset.rolltotal;
   let rollVal = card.dataset.rollval;
+  let swingID;
 
   //check for a swing and remove it, then set new swing.
   for (const element of actor.items) {
     if (element.type == "color") {
       if (element.system.isSwing) {
+        swingID = element.id;
         element.update({ "system.isSwing": false });
       }
     }
   }
 
-  console.log();
-  color.update({ "system.isSwing": true, "system.swingValue": rollVal });
-
-  console.log("chat old vals", actor.system.currentSwingColor, actor.system.currentSwingValue, actor.system.currentSwingName)
-  console.log("chat new vals", color.system.hexColor, rollVal, color.system.internalName || color.name);
-  let obj = {};
-
-  // actor.update produces some strange results if you change it with values matching what it already had (maybe intended and im dumb)
-  // either way this gets around that
-  if (color.system.internalName) {
-    if (actor.system.currentSwingColor !== color.system.hexColor) {
-      obj["system.currentSwingColor"] = color.system.hexColor;
-    }
-    if (actor.system.currentSwingValue !== rollVal) {
-      obj["system.currentSwingValue"] = rollVal;
-    }
-    if (actor.system.currentSwingName !== color.system.internalName) {
-      obj["system.currentSwingName"] = color.system.internalName;
-    }
-
-    console.log(obj)
-    actor.update(obj);
+  //foundry cannot update the same thing twice in quick succession, has strangeness occur, I suspect due to database locking?
+  //so this has to done like this, yuck
+  if (swingID && selectedColor.id == swingID) {
+    // if swing clicked matches existing swing, clear swing
+    actor.update({
+      "system.currentSwingColor": null,
+      "system.currentSwingValue": null,
+      "system.currentSwingName": "none",
+    });
+    ChatMessage.create({
+      user: game.user._id,
+      content: "Swing dropped.",
+      speaker: ChatMessage.getSpeaker(),
+    });
+    return;
   } else {
-    if (actor.system.currentSwingColor !== color.system.hexColor) {
-      obj["system.currentSwingColor"] = color.system.hexColor;
-    }
-    if (actor.system.currentSwingValue !== rollVal) {
-      obj["system.currentSwingValue"] = rollVal;
-    }
-    if (actor.system.currentSwingName !== color.name) {
-      obj["system.currentSwingName"] = color.name;
-    }
+    let obj = {};
 
-    console.log(obj)
+    selectedColor.update({
+      "system.isSwing": true,
+      "system.swingValue": rollVal,
+    });
+    if (selectedColor.system.internalName) {
+      if (actor.system.currentSwingColor !== selectedColor.system.hexColor) {
+        obj["system.currentSwingColor"] = selectedColor.system.hexColor;
+      }
+      if (actor.system.currentSwingValue !== rollVal) {
+        obj["system.currentSwingValue"] = rollVal;
+      }
+      if (actor.system.currentSwingName !== selectedColor.system.internalName) {
+        obj["system.currentSwingName"] = selectedColor.system.internalName;
+      }
+    } else {
+      if (actor.system.currentSwingColor !== selectedColor.system.hexColor) {
+        obj["system.currentSwingColor"] = selectedColor.system.hexColor;
+      }
+      if (actor.system.currentSwingValue !== rollVal) {
+        obj["system.currentSwingValue"] = rollVal;
+      }
+      if (actor.system.currentSwingName !== selectedColor.name) {
+        obj["system.currentSwingName"] = selectedColor.name;
+      }
+    }
     actor.update(obj);
   }
 
-  console.log(actor);
-  let chatContent = "Locked in to " + color.system.displayName;
+  let chatContent = "I locked in to " + selectedColor.system.displayName;
   if (card.dataset.isrecover) {
-    chatContent += ".";
+    chatContent += "!";
   } else {
-    chatContent += " [+" + parseInt(color.system.value) + "].";
+    chatContent += " [+" + parseInt(selectedColor.system.value) + "]!";
   }
   ChatMessage.create({
     user: game.user._id,

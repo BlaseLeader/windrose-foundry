@@ -3,7 +3,6 @@
  * @extends {Actor}
  */
 export class WindroseActor extends Actor {
-
   /** @override */
   prepareData() {
     // Prepare data for the actor. Calling the super version of this executes
@@ -14,34 +13,37 @@ export class WindroseActor extends Actor {
   }
 
   async _preCreate(data, options, user) {
-    if ( (await super._preCreate(data, options, user)) === false ) return false;
+    if ((await super._preCreate(data, options, user)) === false) return false;
 
     // Configure prototype token settings
     const prototypeToken = {};
-    if ( this.type === "character" ) Object.assign(prototypeToken, {actorLink: true});
+    if (this.type === "character")
+      Object.assign(prototypeToken, { actorLink: true });
     this.updateSource({ prototypeToken });
   }
   //Create a new actor - When creating an actor set basics including tokenlink, bars, displays sight
-  static async create (data, options = {}) {
-    if (data.type === 'character') {
+  static async create(data, options = {}) {
+    if (data.type === "character") {
       data.prototypeToken = mergeObject(data.prototypeToken || {}, {
         actorLink: true,
         disposition: 1,
         //displayName: CONST.TOKEN_DISPLAY_MODES.ALWAYS,
         //displayBars: CONST.TOKEN_DISPLAY_MODES.ALWAYS,
         sight: {
-          enabled: true
+          enabled: true,
         },
-        detectionModes: [{
-          id: 'basicSight',
-          range: 30,
-          enabled: true
-        }]
-      })
-    } 
-    let actor = await super.create(data, options)
-    return 
-}
+        detectionModes: [
+          {
+            id: "basicSight",
+            range: 30,
+            enabled: true,
+          },
+        ],
+      });
+    }
+    let actor = await super.create(data, options);
+    return;
+  }
 
   /** @override */
   prepareBaseData() {
@@ -73,7 +75,7 @@ export class WindroseActor extends Actor {
    * Prepare Character type specific data
    */
   _prepareCharacterData(actorData) {
-    if (actorData.type !== 'character') return;
+    if (actorData.type !== "character") return;
 
     const systemData = actorData.system;
   }
@@ -82,7 +84,7 @@ export class WindroseActor extends Actor {
    * Prepare NPC type specific data.
    */
   _prepareNpcData(actorData) {
-    if (actorData.type !== 'npc') return;
+    if (actorData.type !== "npc") return;
 
     const systemData = actorData.system;
   }
@@ -104,7 +106,7 @@ export class WindroseActor extends Actor {
    * Prepare character roll data.
    */
   _getCharacterRollData(data) {
-    if (this.type !== 'character') return;
+    if (this.type !== "character") return;
 
     // Copy the ability scores to the top level, so that rolls can use
     // formulas like `@str.mod + 4`.
@@ -124,7 +126,7 @@ export class WindroseActor extends Actor {
    * Prepare NPC roll data.
    */
   _getNpcRollData(data) {
-    if (this.type !== 'npc') return;
+    if (this.type !== "npc") return;
 
     // Process additional NPC data here.
   }
@@ -134,16 +136,11 @@ export class WindroseActor extends Actor {
     for (const element of this.items) {
       if (element.type === "color") {
         if (element.system.isSwing) {
-          console.log("returning value from getSwing")
           return element;
         }
       }
     }
 
-    return null
-  
+    return null;
   }
-
 }
-
-

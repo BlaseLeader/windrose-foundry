@@ -8,6 +8,11 @@
           "min": 0,
           "max": 10
         },
+        "aura": {
+          "value": 0,
+          "min": 0,
+          "max": 10
+        },
         "biography": "",
         "currentSwingName":"",
         "currentSwingValue": null,
@@ -17,7 +22,7 @@
         "globalDyeBonus":"",
         "globalDoBonus":"",
         "globalRecoverBonus":"",
-        "autoUnlock":true,        "autoHealRecover":true
+        "autoUnlock":true,        "autoHealRecover":true, "autoPulseRoll": true
       }
     },
     "character": {
