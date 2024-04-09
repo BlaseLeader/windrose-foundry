@@ -15,6 +15,10 @@ function onSelectSwing(event) {
   let selectedColor = actor.items.get(card.dataset.itemId);
   let total = card.dataset.rolltotal;
   let rollVal = card.dataset.rollval;
+  if (actor.system.aura && actor.system.aura.value > 0)
+  {
+    rollVal++;
+  }
   let swingID;
 
   //check for a swing and remove it, then set new swing.
@@ -40,6 +44,7 @@ function onSelectSwing(event) {
       user: game.user._id,
       content: "Swing dropped.",
       speaker: ChatMessage.getSpeaker(),
+      rollMode: "gmroll"
     });
     return;
   } else {
@@ -83,5 +88,6 @@ function onSelectSwing(event) {
     user: game.user._id,
     content: chatContent,
     speaker: ChatMessage.getSpeaker(),
+    rollMode: "gmroll"
   });
 }

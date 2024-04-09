@@ -262,6 +262,7 @@ export class WindroseActorSheet extends ActorSheet {
       user: game.user._id,
       speaker: ChatMessage.getSpeaker(),
       content: `${actor.name} set their Swing to ${colorName} [${swing}]`,
+      rollMode: "selfroll",
     });
 
     return;
@@ -343,7 +344,6 @@ export class WindroseActorSheet extends ActorSheet {
     let tokenId = "";
     if (actor.isToken) {
       tokenId = actor.token.id;
-  
     }
 
     // let finalRoll = await CreateRollFromUserString(testRoll)
@@ -367,7 +367,6 @@ export class WindroseActorSheet extends ActorSheet {
     );
 
     colorRollArray = cleanseDice(colorRollArray);
-
 
     let speaker = ChatMessage.getSpeaker(actor);
     speaker.alias = actor.name;

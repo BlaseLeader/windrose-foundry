@@ -8,10 +8,12 @@ import { WindroseItemSheet } from "./sheets/item-sheet.mjs";
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { BOILERPLATE } from "./helpers/config.mjs";
 import * as Swing from "./helpers/swing.mjs";
+import { TokenWindrose } from "./canvas/token.mjs"
 
 // import { Application, Assets, Sprite } from "pixi.js";
 
 import * as Chat from "./documents/chat.mjs";
+import { CombatWindrose } from "./combat.mjs";
 
 /* -------------------------------------------- */
 /*  Init Hook                                   */
@@ -41,6 +43,12 @@ Hooks.once("init", async function () {
   // Define custom Document classes
   CONFIG.Actor.documentClass = WindroseActor;
   CONFIG.Item.documentClass = WindroseItem;
+  CONFIG.Token.objectClass = TokenWindrose;
+  // TODO: Figure out how exactly to introduce Lancer Initiative module
+  // CONFIG.Combat.documentClass = CombatWindrose;
+  // CONFIG.LancerInitiative.module = 
+
+  // add_combat_interface(CombatWindrose)
 
   // Register sheet application classes
   Actors.unregisterSheet("core", ActorSheet);
@@ -161,44 +169,42 @@ Hooks.on("hoverToken", async (object, controlled) => {
   }
 });
 
-// also need to figure out how to do this for already placed tokens (do on init?)
-Hooks.on("createToken", async (doc, options, userId) => {
-  const textElement = new PIXI.Text();
-  var swing = doc.actor.getSwing();
-  if (swing) {
-    Swing.setColoredSwing(
-      doc,
-      swing.system.swingValue,
-      swing.system.hexColor,
-      textElement
-    );
-  } else {
-    Swing.setColorless(doc, textElement);
-  }
-});
+// Hooks.on("createToken", async (doc, options, userId) => {
+//   const textElement = new PIXI.Text();
+//   var swing = doc.actor.getSwing();
+//   if (swing) {
+//     Swing.setColoredSwing(
+//       doc,
+//       swing.system.swingValue,
+//       swing.system.hexColor,
+//       textElement
+//     );
+//   } else {
+//     Swing.setColorless(doc, textElement);
+//   }
+// });
 
-Hooks.on("canvasReady", async (canvas) => {
-  await PIXI.Assets.load("https://pixijs.com/assets/bitmap-font/desyrel.xml");
+// Hooks.on("canvasReady", async (canvas) => {
+//   //loop through all tokens on canvas to update swings
+//   canvas.tokens.objects.children.forEach((token) => {
+//     let textElement = new PIXI.Text();
+//     let swing = token.actor.getSwing();
 
-  //loop through all tokens on canvas to update swings
-  canvas.tokens.objects.children.forEach((token) => {
-    let textElement = new PIXI.Text();
-    let swing = token.actor.getSwing();
+//     //if character has an active swing, show it
+//     if (swing) {
+//       Swing.setColoredSwing(
+//         token.document,
+//         swing.system.swingValue,
+//         swing.system.hexColor,
+//         textElement
+//       );
+//     } else {
+//       Swing.setColorless(token.document, textElement);
+//     }
+//   });
+// });
 
-    //if character has an active swing, show it
-    if (swing) {
-      Swing.setColoredSwing(
-        token.document,
-        swing.system.swingValue,
-        swing.system.hexColor,
-        textElement
-      );
-    } else {
-      Swing.setColorless(token.document, textElement);
-    }
-  });
-});
-
+Hooks.on("updateActor", console.log)
 Hooks.on("updateActor", async (doc, change) => {
   //get all tokens associated with the actor
   const tokens = doc.getActiveTokens();
@@ -222,7 +228,6 @@ Hooks.on("updateActor", async (doc, change) => {
     } else {
       Swing.setColorless(token.document, textElement);
     }
-    // }
   };
 });
 
@@ -245,13 +250,15 @@ Hooks.on("deleteToken", async (doc) => {
   doc.layer.getChildByName(doc.id).destroy();
 });
 
+let roundCount = 0;
+
 // pulse roll
 Hooks.on("updateCombat", async (doc, changes) => {
-  if (changes.round) {
-
-    for (let combatant of doc.combatants)
-    {
-      await Swing.DropSwing(combatant.actor)
+  if (changes.round && changes.round !== roundCount && (game.user.name === "Gamemaster" || game.user.name === "blazeleader")){ 
+  roundCount = changes.round
+  console.log("roundCountChanged", roundCount)
+    for (let combatant of doc.combatants) {
+      await Swing.DropSwing(combatant.actor);
     }
 
     doc.combatants.forEach((combatant) => {

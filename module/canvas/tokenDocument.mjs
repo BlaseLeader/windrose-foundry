@@ -1,0 +1,1 @@
+export default class TokenDocumentWindrose extends SystemFlagsMixin(TokenDocument) {}

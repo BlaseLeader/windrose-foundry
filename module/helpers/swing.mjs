@@ -1,14 +1,17 @@
 export function setColoredSwing(tokenDoc, swingVal, swingColor, textElement) {
   this.createSwingValue(tokenDoc, swingVal, swingColor, textElement);
 
-  this.createSwingAura(tokenDoc, swingColor);
+  // otherwise users without permission will be constantly attempting to alter the token
+  if (tokenDoc.isOwner || game.user.isGM) {
+    this.createSwingAura(tokenDoc, swingColor);
+  }
 }
 
 export function createSwingAura(tokenDoc, swingColor) {
   //set aura
   const newAura = Auras.newAura();
   newAura.colour = swingColor;
-  newAura.square = true;
+  newAura.square = false;
   newAura.opacity = 0.5;
   newAura.permission = "all";
   // auras.push(newAura);
@@ -39,7 +42,9 @@ export function createSwingValue(tokenDoc, swingVal, swingColor, textElement) {
 export function setColorless(tokenDoc, textElement) {
   this.hideSwingValue(tokenDoc, textElement);
 
-  this.hideSwingAura(tokenDoc);
+  if (tokenDoc.isOwner || game.user.isGM) {
+    this.hideSwingAura(tokenDoc);
+  }
 }
 
 export function hideSwingValue(tokenDoc, textElement) {
@@ -64,6 +69,7 @@ export function hideSwingValue(tokenDoc, textElement) {
 export function hideSwingAura(tokenDoc) {
   //set aura
   let aura = tokenDoc.getFlag("token-auras", "aura1");
+  aura = aura ? aura : Auras.newAura();
   aura.colour = "#FFFFFF";
   aura.opacity = 0;
   // auras.push(newAura);

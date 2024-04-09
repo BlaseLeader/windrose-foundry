@@ -133,12 +133,11 @@ export class WindroseActor extends Actor {
 
   getSwing() {
     //for loop instead of for each so it can return early
-    for (const element of this.items) {
-      if (element.type === "color") {
-        if (element.system.isSwing) {
-          return element;
-        }
-      }
+    if (this.system.currentSwingValue) {
+      return {
+        swingValue: this.system.currentSwingValue,
+        swingColor: this.system.currentSwingColor,
+      };
     }
 
     return null;
