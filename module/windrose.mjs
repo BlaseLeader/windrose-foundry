@@ -250,13 +250,9 @@ Hooks.on("deleteToken", async (doc) => {
   doc.layer.getChildByName(doc.id).destroy();
 });
 
-let roundCount = 0;
-
 // pulse roll
-Hooks.on("updateCombat", async (doc, changes) => {
-  if (changes.round && changes.round !== roundCount && (game.user.name === "Gamemaster" || game.user.name === "blazeleader")){ 
-  roundCount = changes.round
-  console.log("roundCountChanged", roundCount)
+Hooks.on("preUpdateCombat", async (doc, changes) => {
+  if (changes.round){ 
     for (let combatant of doc.combatants) {
       await Swing.DropSwing(combatant.actor);
     }
