@@ -1,3 +1,5 @@
+import { WILD_SWING } from "../helpers/swing.mjs";
+
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
@@ -131,15 +133,142 @@ export class WindroseActor extends Actor {
     // Process additional NPC data here.
   }
 
+  async setSwing(colorID, value) {
+    this.items.forEach(async (element, index) => {
+      if (element.type === "color") {
+        if (element.id === colorID) {
+          await element.update({
+            "system.isSwing": true,
+            "system.swingValue": value,
+          });
+          await this.update({ "system.swing.id": element.id });
+        } else {
+          await element.update({
+            "system.isSwing": false,
+            "system.swingValue": null,
+          });
+        }
+      }
+    });
+    return;
+  }
+
+  async dropSwing() {
+    this.items.forEach(async (element, index) => {
+      if (element.type === "color") {
+        await element.update({
+          "system.isSwing": false,
+          "system.swingValue": null,
+        });
+      }
+    });
+    this.update({
+      "system.swing.id": null,
+      "system.currentSwingName": null,
+      "system.currentSwingValue": null,
+      "system.currentSwingColor": null,
+    });
+    return;
+  }
+
   getSwing() {
-    //for loop instead of for each so it can return early
-    if (this.system.currentSwingValue) {
-      return {
-        swingValue: this.system.currentSwingValue,
-        swingColor: this.system.currentSwingColor,
-      };
+    return this.system.swing.id
+      ? fromUuidSync(`Actor.${this.id}.Item.${this.system.swing.id}`)
+      : null;
+  }
+
+  getActiveColors() {
+    const colorArray = [];
+    for (const element of this.items) {
+      if (element.type === "color") {
+        if (!(element.system.disabled || element.system.wounded)) {
+          colorArray.push(element);
+        }
+      }
     }
 
-    return null;
+    return colorArray;
+  }
+
+  getAllColors() {
+    const colorArray = [];
+    for (const element of this.items) {
+      if (element.type === "color") {
+        colorArray.push(element);
+      }
+    }
+    return colorArray;
+  }
+
+  async rollToDo(colorID, bonuses) {
+    const d20Roll = await new Roll("1d20").roll({ async: true });
+
+    let swing = structuredClone(WILD_SWING);
+    if (colorID) {
+      const color = fromUuidSync(`Actor.${this.id}.Item.${colorID}`);
+      swing.color = color.system.hexColor;
+      swing.isSwing = color.system.isSwing; // if removing isSwing, replace with check against getSwing
+      swing.displayName = color.system.displayName;
+      swing.value = parseInt(color.system.swingValue); // assume is swing, will overwrite later if not
+      swing.attributeBonus = color.system.value;
+    }
+
+    if (!!!swing.isSwing) {
+      let swingRoll = await new Roll(`1d6+${swing.attributeBonus}`).roll({
+        async: true,
+      });
+      swing.value = swingRoll.total;
+    }
+    return {
+      d20: d20Roll.total,
+      swing,
+      total: d20Roll.total + swing.value + bonuses,
+    };
+  }
+
+  async rollToDye(bonuses) {
+    let colors = {
+      attributes: this.getAllColors(),
+      wounds: [],
+      locks: [],
+      rolls: [],
+    };
+    let total = 0;
+    for (const attribute of colors.attributes) {
+      if (!!attribute.system.disabled) {
+        continue;
+      } else if (!!attribute.system.wounded) {
+        colors.wounds.push(attribute);
+      } else if (!!attribute.system.locked) {
+        colors.locks.push(attribute);
+
+        if (actor.system.autoUnlock) {
+          attribute.update({ "system.locked": false });
+        }
+      } else {
+        if (!!attribute.system.isSwing) {
+          colors.rolls.push({
+            attribute,
+            value: parseInt(attribute.system.swingValue),
+          });
+          total += parseInt(attribute.system.swingValue);
+        } else {
+          const roll = await new Roll(
+            `${attribute.system.diceSize}+${attribute.system.value}`
+          ).roll({ async: true });
+          colors.rolls.push({
+            attribute,
+            value: roll.total,
+          });
+          total += roll.total;
+        }
+      }
+    }
+
+    total += bonuses;
+    return {
+      colors,
+      total,
+    };
   }
 }

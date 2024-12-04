@@ -63,7 +63,6 @@ export class WindroseItem extends Item {
 
     // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
-    const rollMode = game.settings.get('core', 'rollMode');
     let label = `[${item.type}] ${item.name}`;
     let content = item.system.description ?? ''
     if(item.type == 'gift')
@@ -84,7 +83,8 @@ export class WindroseItem extends Item {
     if (!this.system.formula) {
       ChatMessage.create({
         speaker: speaker,
-        rollMode: rollMode,
+        type: CONST.CHAT_MESSAGE_TYPES.ROLL,
+        rollMode: game.settings.get("core", "rollMode"),
         flavor: label,
         content: content
       });
@@ -100,7 +100,8 @@ export class WindroseItem extends Item {
       // let result = await roll.roll({async: true});
       roll.toMessage({
         speaker: speaker,
-        rollMode: rollMode,
+        type: CONST.CHAT_MESSAGE_TYPES.ROLL,
+        rollMode: game.settings.get("core", "rollMode"),
         flavor: label,
       });
       return roll;

@@ -2,6 +2,7 @@ import {
   onManageActiveEffect,
   prepareActiveEffectCategories,
 } from "../helpers/effects.mjs";
+import { createChatRoll, CreateRollFromUserString } from "../helpers/rolls.mjs";
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -51,13 +52,14 @@ export class WindroseActorSheet extends ActorSheet {
     if (actorData.type == "character") {
       this._prepareItems(context);
       this._prepareCharacterData(context);
+      this._prepareSettings(context);
     }
 
     // Prepare NPC data and items.
     if (actorData.type == "npc") {
       this._prepareItems(context);
+      this._prepareSettings(context);
     }
-
     // Add roll data for TinyMCE editors.
     context.rollData = context.actor.getRollData();
 
@@ -76,6 +78,15 @@ export class WindroseActorSheet extends ActorSheet {
    */
   _prepareCharacterData(context) {}
 
+  /**
+   * Organize and classify Settings for Character sheets.
+   *
+   */
+  _prepareSettings(context) {
+    context.settings = {
+      supportAction: game.settings.get("windrose", "supportAction"),
+    };
+  }
   /**
    * Organize and classify Items for Character sheets.
    *
@@ -159,6 +170,7 @@ export class WindroseActorSheet extends ActorSheet {
       .find(".item-rollToRecoverButton")
       .click(this._onRollToRecover.bind(this));
     html.find(".item-setSwingButton").click(this._onSetSwing.bind(this));
+    html.find(".item-supportAction").click(this._onSupportAction.bind(this));
 
     // Delete Inventory Item
     html.find(".item-delete").click(this._onDelete.bind(this));
@@ -203,12 +215,10 @@ export class WindroseActorSheet extends ActorSheet {
     li.slideUp(200, () => this.render(false));
   }
 
-  async _onSetSwing(event) {
-    let actor = this.actor;
+  async _onSupportAction(event) {
     let colorArray = [];
-
     //Get Color Array
-    for (const element of actor.items) {
+    for (const element of this.actor.items) {
       if (element.type === "color") {
         if (
           !(
@@ -222,266 +232,117 @@ export class WindroseActorSheet extends ActorSheet {
       }
     }
 
-    //Dialogue Options
-    let userInput = await SetSwingBonusDialogue(colorArray);
+    let userInput = await SupportActionDialogue(colorArray);
+    if (userInput.cancelled) return;
+
+    // todo: lockout die
+
+    // todo: create pickup method
+    console.log("Create Pickup", userInput.selectedColor);
+
+    // hook to listen to unlock out die when it's expended?
+  }
+
+  async _onSetSwing(event) {
+    const colorArray = this.actor.getActiveColors();
+
+    const userInput = await SetSwingBonusDialogue(colorArray);
     if (userInput.cancelled) {
       return;
     }
-    let swing = userInput.swing;
-    let selectedColorID = userInput.selectedColor;
 
-    let color = actor.items.get(selectedColorID);
-    let colorName = "";
-    if (color) {
-      colorArray.forEach((element) => {
-        if (element.system.isSwing && element.id != color.id) {
-          element.update({ "system.isSwing": false });
-        }
-      });
-      color.update({ "system.isSwing": true, "system.swingValue": swing });
-      if (color.system.internalName != "") {
-        actor.update({
-          "system.currentSwingName": color.system.internalName,
-          "system.currentSwingValue": swing,
-          "system.currentSwingColor": color.system.hexColor,
-        });
-      } else {
-        actor.update({
-          "system.currentSwingName": color.system.displayName,
-          "system.currentSwingValue": swing,
-          "system.currentSwingColor": color.system.hexColor,
-        });
-      }
-      colorName = color.system.displayName;
-    } else {
-      system.log("Error: Color not found");
-      return;
-    }
+    this.actor.setSwing(userInput.selectedColor, parseInt(userInput.swing));
+    const color = fromUuidSync(
+      `Actor.${this.actor.id}.Item.${userInput.selectedColor}`
+    );
 
-    ChatMessage.create({
-      user: game.user._id,
-      speaker: ChatMessage.getSpeaker(),
-      content: `${actor.name} set their Swing to ${colorName} [${swing}]`,
-      rollMode: "selfroll",
-    });
-
+    createChatRoll(
+      `${this.actor.name} set their Swing to ${
+        color.system.displayName ?? color.system.name
+      } [${swing}]`
+    );
     return;
   }
 
-  async _onRollToDye(event, rollMode, skipUserInput) {
-    let actor = this.actor;
-    let colorArray = [];
-    let colorWoundArray = [];
-    let colorLockArray = [];
-    let colorRollArray = [];
-    let total = 0;
-    let attVal = 0;
-    let attColor = "";
-    var formulaRoll;
-
-    if (!skipUserInput) {
-      //Dialogue Options
-      const userInput = await GetDyeBonusDialogue(actor.system.globalDyeBonus);
-      if (userInput.cancelled) {
-        return;
-      }
-
-      // let testRoll = userInput.bonuses;
-      formulaRoll = await CreateRollFromUserString(userInput.bonuses, "0");
-      total += formulaRoll.total;
-      colorRollArray.push(formulaRoll);
-    }
-    //One dice for every color
-    for (const element of actor.items) {
-      if (element.type === "color") {
-        if (element.system.disabled) {
-        } else if (element.system.wounded) {
-          colorWoundArray.push(element);
-        } else if (element.system.locked) {
-          colorLockArray.push(element);
-
-          //Unlock dice that get rolled as locked.
-          if (actor.system.autoUnlock) {
-            let item = this.actor.items.get(element._id);
-            item.update({ "system.locked": false });
-          }
-        } else {
-          let obj = {};
-          obj.colorItem = element;
-          var roll;
-          if (element.system.isSwing) {
-            roll = await CreateRollFromUserString(
-              element.system.swingValue,
-              "0"
-            );
-            total += parseInt(element.system.value);
-            attVal = parseInt(element.system.value);
-            attColor = element.system.hexColor;
-            // testRoll += "+" + element.system.SwingValue;
-          } else {
-            roll = await CreateRollFromUserString(
-              element.system.diceSize + "+" + element.system.value,
-              "1d6"
-            );
-            // testRoll += "+" + element.system.diceSize + "+" + element.system.value
-          }
-          obj.roll = roll;
-          total += roll.total;
-          colorArray.push(obj);
-          colorRollArray.push(roll);
-        }
-      }
-    }
-    var formulaString = "";
-    if (formulaRoll) {
-      if (formulaRoll.total >= 0) {
-        formulaString = "+" + formulaRoll.total;
-      } else {
-        formulaString = "-" + formulaRoll.total;
-      }
-    }
-    //For npcs which can have multiple sheets, if this is a token sheet grab the token id so we can use that instead of actor id.
-    let tokenId = "";
-    if (actor.isToken) {
-      tokenId = actor.token.id;
+  async _onRollToDye(event) {
+    const userInput = await GetDyeBonusDialogue(
+      this.actor.system.globalDyeBonus
+    );
+    if (userInput.cancelled) {
+      return;
     }
 
-    // let finalRoll = await CreateRollFromUserString(testRoll)
-    let ownerID = actor.id;
+    const userBonusesRoll = await CreateRollFromUserString(
+      userInput.bonuses,
+      "0"
+    );
+
+    const { colors, total } = await this.actor.rollToDye(userBonusesRoll.total);
     let cardData = {
-      colorArray: colorArray,
-      colorWoundArray: colorWoundArray,
-      colorLockArray: colorLockArray,
-      ownerId: ownerID,
-      tokenId: tokenId,
-      attVal: attVal,
-      formulaRoll: formulaRoll,
-      formulaString: formulaString,
-      attColor: attColor,
-      finalTotal: total,
-      unlockedADie: colorLockArray.length > 0 && actor.system.autoUnlock,
+      colors,
+      ownerID: this.actor.id,
+      tokenID: this.actor.isToken ? this.actor.token.id : "", //needed for NPCs picking up swing
+      bonuses: {
+        roll: userBonusesRoll,
+        string:
+          userBonusesRoll.total >= 0
+            ? `+${userBonusesRoll.total}`
+            : `-${userBonusesRoll.total}`,
+      },
+      unlockedADie: colors.locks.length > 0 && actor.system.autoUnlock,
+      total,
     };
+
     let chatContent = await renderTemplate(
       this.chatTemplate["rollToDye"],
       cardData
     );
 
-    colorRollArray = cleanseDice(colorRollArray);
-
-    let speaker = ChatMessage.getSpeaker(actor);
-    speaker.alias = actor.name;
-
-    ChatMessage.create({
-      user: game.user._id,
-      speaker,
-      content: chatContent,
-      rolls: colorRollArray, //passing this for dice so nice.
-      sound: CONFIG.sounds.dice,
-      type: CONST.CHAT_MESSAGE_TYPES.ROLL,
-      rollMode,
-    });
+    createChatRoll(chatContent, this.actor);
     return;
   }
 
   async _onRollToRecover(event) {
-    let actor = this.actor;
-    let colorArray = [];
-    let colorWoundArray = [];
-    let colorLockArray = [];
-    let colorRollArray = [];
-    let total = 0;
-    let attVal = 0;
-    let attColor = "";
-
-    //Dialogue Options
-    let userInput = await GetRecoverBonusDialogue(
-      actor.system.globalRecoverBonus
+    const userInput = await GetRecoverBonusDialogue(
+      this.actor.system.globalDyeBonus + 1
     );
     if (userInput.cancelled) {
       return;
     }
-    let bonuses = userInput.bonuses + 1;
 
-    var formulaRoll;
-    formulaRoll = await CreateRollFromUserString(bonuses, "0");
-    total += formulaRoll.total;
-    colorRollArray.push(formulaRoll);
+    const userBonusesRoll = await CreateRollFromUserString(
+      userInput.bonuses,
+      "1"
+    );
 
-    //One dice for every color
-    for (const element of actor.items) {
-      if (element.type === "color") {
-        if (element.system.disabled) {
-          // if disabled, do nothing
-        } else if (element.system.wounded) {
-          // if wounded, add to array and otherwise do nothing
-          colorWoundArray.push(element);
-        } else {
-          // otherwise, unlock locked dice
-          if (element.system.locked) {
-            //add to the lock array to render in the chat as locked
+    const { colors, total } = await this.actor.rollToDye(userBonusesRoll.total);
+    let hpUpdateValue;
 
-            colorLockArray.push(element);
-
-            //Unlock dice that get rolled as locked.
-            if (actor.system.autoUnlock) {
-              let item = this.actor.items.get(element._id);
-              item.update({ "system.locked": false });
-            }
-            continue; // skip rolling
-          }
-
-          let obj = {};
-          obj.colorItem = element;
-          // total += parseInt(element.system.value); instead add attVal to the roll and add the roll
-          attVal += parseInt(element.system.value);
-          var roll = await CreateRollFromUserString(
-            element.system.diceSize + "+" + element.system.value,
-            "1d6"
-          );
-          obj.roll = roll;
-          total += roll.total;
-          colorArray.push(obj);
-          colorRollArray.push(roll);
-        }
-      }
-    }
-
-    var formulaString = "";
-    if (formulaRoll.total >= 0) {
-      formulaString = "+" + formulaRoll.total;
-    } else {
-      formulaString = "-" + formulaRoll.total;
-    }
-
-    let tokenId = "";
-    if (actor.isToken) {
-      tokenId = actor.token.id;
-    }
-
-    let ownerID = this.actor.id;
-    let hpUpdateValue = 0;
-    // update HP on a recover roll if flag set to do so
-    if (actor.system.autoHealRecover) {
+    if (this.actor.system.autoHealRecover) {
       hpUpdateValue =
-        total > actor.system.health.value ? actor.system.health.max : total; // update rolled value or max hp, whichever is lower
-      actor.update({ "system.health.value": hpUpdateValue });
+        total > this.actor.system.health.value
+          ? this.actor.system.health.max
+          : total; // update rolled value or max hp, whichever is lower
+      this.actor.update({ "system.health.value": hpUpdateValue });
     }
 
     let cardData = {
-      colorArray,
-      colorWoundArray,
-      ownerId: ownerID,
-      tokenId,
-      formulaRoll,
-      formulaString,
-      attColor,
-      finalTotal: total,
-
-      // add lock and didUnlock to template
-      colorLockArray,
-      didUnlock: colorLockArray.length > 0 && actor.system.autoUnlock,
-      didRecover: actor.system.autoHealRecover,
-      recoveredValue: hpUpdateValue,
+      colors,
+      ownerID: this.actor.id,
+      tokenID: this.actor.isToken ? this.actor.token.id : "", //needed for NPCs picking up swing
+      bonuses: {
+        roll: userBonusesRoll,
+        string:
+          userBonusesRoll.total >= 0
+            ? `+${userBonusesRoll.total}`
+            : `-${userBonusesRoll.total}`,
+      },
+      total,
+      didUnlock: colors.locks.length > 0 && actor.system.autoUnlock,
+      recover: {
+        active: this.actor.system.autoHealRecover,
+        value: hpUpdateValue,
+      },
     };
 
     let chatContent = await renderTemplate(
@@ -489,136 +350,60 @@ export class WindroseActorSheet extends ActorSheet {
       cardData
     );
 
-    colorRollArray = cleanseDice(colorRollArray);
-
-    ChatMessage.create({
-      user: game.user._id,
-      speaker: ChatMessage.getSpeaker(),
-      content: chatContent,
-      rolls: colorRollArray, //passing this for dice so nice.
-      sound: CONFIG.sounds.dice,
-      type: CONST.CHAT_MESSAGE_TYPES.ROLL,
-    });
+    createChatRoll(chatContent);
     return;
   }
 
   async _onRollToDo(event) {
-    let actor = this.actor;
-    let colorRoll;
-    let total = 0;
-    let attVal = 0;
-    let attColor = "";
-    let rollArray = [];
-    let colorArray = [];
-    //Get Color Array
-    let colorDefaultBonus = "";
-    for (const element of actor.items) {
-      if (element.type === "color") {
-        if (!(element.system.disabled || element.system.wounded)) {
-          colorArray.push(element);
-          if (element.system.isSwing) {
-            colorDefaultBonus = element.system.globalBonus;
-          }
-        }
-      }
-    }
-    if (colorDefaultBonus == "0") colorDefaultBonus = "";
-    if (
-      colorDefaultBonus &&
-      actor.system.globalDoBonus &&
-      actor.system.globalDoBonus != "0" &&
-      actor.system.globalDoBonus.charAt(0) != "-"
-    )
-      colorDefaultBonus += "+";
-    if (actor.system.globalDoBonus && actor.system.globalDoBonus != "0")
-      colorDefaultBonus += actor.system.globalDoBonus;
-    //Dialogue Options
-    let userInput = await GetDoBonusDialogue(colorArray, colorDefaultBonus);
+    const swing = this.actor.getSwing();
+    const userInput = await GetDoBonusDialogue(
+      this.actor.getActiveColors(),
+      this.actor.system.globalDoBonus +
+        (swing
+          ? (swing.system.globalBonus <= 0 ? "" : "+") +
+            swing.system.globalBonus
+          : "")
+    );
     if (userInput.cancelled) {
       return;
     }
-    let bonuses = userInput.bonuses;
-    let selectedColorID = userInput.selectedColor;
 
-    var formulaRoll;
-    formulaRoll = await CreateRollFromUserString(bonuses, "0");
-    total += formulaRoll.total;
-    rollArray.push(formulaRoll);
+    const userBonusesRoll = await CreateRollFromUserString(
+      userInput.bonuses,
+      "0"
+    );
 
-    //Get color info
-    let color;
-    if (selectedColorID == "wild") {
-      //Roll wild option
-      colorRoll = await new Roll("1d6").roll({ async: true });
-
-      //create a fake color for the chat message
-      color = {};
-      color.system = {};
-      color.system.isSwing = false;
-      color.system.displayName = "Wild";
-      attColor = "#d3d3d3";
-    } else {
-      color = actor.items.get(selectedColorID);
-      //If this is the swing, set the swing die.
-      if (color.system.isSwing) {
-        colorRoll = await CreateRollFromUserString(
-          color.system.swingValue,
-          "0"
-        );
-      } else {
-        //Not the swing so we roll the color's die instead
-        colorRoll = await CreateRollFromUserString(
-          color.system.diceSize,
-          "1d6"
-        );
-      }
-      total += parseInt(color.system.value);
-      attVal = parseInt(color.system.value);
-      attColor = color.system.hexColor;
-    }
-    rollArray.push(colorRoll);
-
-    var d20Roll = await new Roll("1d20").roll({ async: true });
-
-    total += colorRoll.total + d20Roll.total;
-    rollArray.push(d20Roll);
-
-    let ownerID = this.actor.id;
-
-    var formulaString = "";
-    if (formulaRoll.total >= 0) {
-      formulaString = "+" + formulaRoll.total;
-    } else {
-      formulaString = "-" + formulaRoll.total;
-    }
+    const {
+      d20,
+      swing: rollSwing,
+      total,
+    } = await this.actor.rollToDo(
+      userInput.selectedColor,
+      userBonusesRoll.total
+    );
 
     let cardData = {
-      color: color,
-      colorRoll: colorRoll,
-      d20Roll: d20Roll,
-      ownerId: ownerID,
-      attVal: attVal,
-      formulaRoll: formulaRoll,
-      formulaString: formulaString,
-      attColor: attColor,
-      finalTotal: total,
+      swing: rollSwing,
+      attributeBonusesPresent:
+        !!!rollSwing.isSwing && rollSwing.attributeBonus != 0,
+      d20Roll: d20,
+      ownerId: this.actor.id,
+      bonuses: {
+        roll: userBonusesRoll,
+        string:
+          userBonusesRoll.total >= 0
+            ? `+${userBonusesRoll.total}`
+            : `-${userBonusesRoll.total}`,
+      },
+      total,
     };
+
     let chatContent = await renderTemplate(
       this.chatTemplate["rollToDo"],
       cardData
     );
 
-    //Dice so nice cleanser
-    rollArray = cleanseDice(rollArray);
-
-    ChatMessage.create({
-      user: game.user._id,
-      speaker: ChatMessage.getSpeaker(),
-      content: chatContent,
-      rolls: rollArray, //passing this for dice so nice.
-      sound: CONFIG.sounds.dice,
-      type: CONST.CHAT_MESSAGE_TYPES.ROLL,
-    });
+    createChatRoll(chatContent);
     return;
   }
 
@@ -692,9 +477,10 @@ export class WindroseActorSheet extends ActorSheet {
       item.system.locked = !item.system.locked;
       item.update({ "system.locked": item.system.locked });
       if (item.system.locked && item.system.isSwing) {
-        item.update({ "system.isSwing": false });
+        item.update({ "system.isSwing": false, "system.swingValue": null });
         this.actor.update({
-          "system.currentSwingName": "none",
+          "system.swing.id": null,
+          "system.currentSwingName": null,
           "system.currentSwingValue": null,
           "system.currentSwingColor": null,
         });
@@ -743,9 +529,10 @@ export class WindroseActorSheet extends ActorSheet {
     const itemId = element.closest(".item").dataset.itemId;
     const item = this.actor.items.get(itemId);
     if (item) {
-      item.update({ "system.isSwing": false });
+      item.update({ "system.isSwing": false, "system.swingValue": null });
       this.actor.update({
-        "system.currentSwingName": "none",
+        "system.swing.id": null,
+        "system.currentSwingName": null,
         "system.currentSwingValue": null,
         "system.currentSwingColor": null,
       });
@@ -806,9 +593,10 @@ export class WindroseActorSheet extends ActorSheet {
       item.system.wounded = !item.system.wounded;
       item.update({ "system.wounded": item.system.wounded });
       if (item.system.wounded && item.system.isSwing) {
-        item.update({ "system.isSwing": false });
+        item.update({ "system.isSwing": false, "system.swingValue": null });
         this.actor.update({
-          "system.currentSwingName": "none",
+          "system.swing.id": null,
+          "system.currentSwingName": null,
           "system.currentSwingValue": null,
           "system.currentSwingColor": null,
         });
@@ -895,10 +683,12 @@ export class WindroseActorSheet extends ActorSheet {
     }
   }
 }
+
 function _processGetDoBonusDialogue(form) {
   return {
     bonuses: form.bonuses.value,
-    selectedColor: form.attribute.value,
+    selectedColor:
+      form.attribute.value === "wild" ? null : form.attribute.value,
   };
 }
 async function GetDoBonusDialogue(colorArray, defaultBonus) {
@@ -1006,6 +796,13 @@ function _processSetSwingDialogue(form) {
     selectedColor: form.attribute.value,
   };
 }
+
+function _processSupportActionDialogue(form) {
+  return {
+    selectedColor: form.attribute.value,
+  };
+}
+
 async function SetSwingBonusDialogue(colorArray) {
   const template = "systems/windrose/templates/chat/set-swing-dialogue.html";
   const html = await renderTemplate(template, { colors: colorArray });
@@ -1032,6 +829,37 @@ async function SetSwingBonusDialogue(colorArray) {
     new Dialog(data, null).render(true);
   });
 }
+
+async function SupportActionDialogue(colorArray) {
+  const template =
+    "systems/windrose/templates/chat/support-action-dialogue.html";
+  const html = await renderTemplate(template, { colors: colorArray });
+
+  return new Promise((resolve) => {
+    const data = {
+      title: "Set Swing",
+      content: html,
+      buttons: {
+        normal: {
+          label: "Place",
+          callback: (html) =>
+            resolve(
+              _processSupportActionDialogue(html[0].querySelector("form"))
+            ),
+        },
+        cancel: {
+          label: "Cancel",
+          callback: (html) => resolve({ cancelled: true }),
+        },
+      },
+      default: "normal",
+      close: () => resolve({ cancelled: true }),
+    };
+
+    new Dialog(data, null).render(true);
+  });
+}
+
 async function CreateConfirmationDialogue() {
   const template = "systems/windrose/templates/chat/confirmation-dialogue.html";
   const html = await renderTemplate(template, {});
@@ -1073,29 +901,14 @@ function cleanseDice(rollArray) {
   });
   return diceSoNiceArray;
 }
-//User can give us bad roll data so we return either the roll or a fake roll for a bad string
-async function CreateRollFromUserString(userDiceString, defaultDiceString) {
-  let roll;
-  try {
-    roll = await new Roll(userDiceString).roll({ async: true });
-  } catch {
-    console.log("Windrose | Bad value of " + roll + " was ignored");
 
-    //If we are given a default, roll that instead (for empty strings from migrations)
-    if (!!defaultDiceString) {
-      userDiceString = defaultDiceString;
-    } else {
-      userDiceString = "0";
-    }
-    roll = await new Roll(userDiceString).roll({ async: true });
-  }
-  return roll;
-}
 function CreateAutomatedMessage(actor, message) {
   if (!actor.system.automatedMessaging) return;
   ChatMessage.create({
     user: game.user._id,
     speaker: ChatMessage.getSpeaker(),
     content: message,
+    type: CONST.CHAT_MESSAGE_TYPES.ROLL,
+    rollMode: game.settings.get("core", "rollMode"),
   });
 }

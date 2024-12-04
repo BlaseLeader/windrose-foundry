@@ -1,4 +1,12 @@
-export function setColoredSwing(tokenDoc, swingVal, swingColor, textElement) {
+export const WILD_SWING = {
+  color: "#d3d3d3",
+  isSwing: false,
+  displayName: "Wild",
+  attributeBonus: 0,
+};
+
+export function setColoredSwingGraphic(tokenDoc, swingVal, swingColor, textElement) {
+  console.log("setColoredSwing", tokenDoc, swingVal, swingColor, textElement)
   this.createSwingValue(tokenDoc, swingVal, swingColor, textElement);
 
   // otherwise users without permission will be constantly attempting to alter the token
@@ -8,13 +16,11 @@ export function setColoredSwing(tokenDoc, swingVal, swingColor, textElement) {
 }
 
 export function createSwingAura(tokenDoc, swingColor) {
-  //set aura
   const newAura = Auras.newAura();
   newAura.colour = swingColor;
   newAura.square = false;
   newAura.opacity = 0.5;
   newAura.permission = "all";
-  // auras.push(newAura);
   newAura.distance = 0.5;
   tokenDoc.setFlag("token-auras", "aura1", newAura);
 }
@@ -28,18 +34,23 @@ export function createSwingValue(tokenDoc, swingVal, swingColor, textElement) {
   textElement.alpha = 0.5;
   textElement.isMask = true;
 
-  textElement.style.fontFamily = "Arial Black";
-  textElement.style.fontSize = 500;
-  textElement.style.fill = swingColor;
+  textElement.style = {
+    fontFamily: "Arial Black",
+    fontSize: 500,
+    fill: swingColor,
+    stroke: "black",
+    strokeThickness: 25,
+  };
 
   textElement.width = tokenDoc.object.w;
   textElement.height = tokenDoc.object.h;
-  textElement.resolution = 2;
+  textElement.resolution = 4;
 
+  console.log(textElement)
   tokenDoc.layer.addChild(textElement);
 }
 
-export function setColorless(tokenDoc, textElement) {
+export function setColorlessSwingGraphic(tokenDoc, textElement) {
   this.hideSwingValue(tokenDoc, textElement);
 
   if (tokenDoc.isOwner || game.user.isGM) {
@@ -74,21 +85,4 @@ export function hideSwingAura(tokenDoc) {
   aura.opacity = 0;
   // auras.push(newAura);
   tokenDoc.setFlag("token-auras", "aura1", aura);
-}
-
-export function GetSwingValue(actor) {
-  return actor.system.currentSwingValue;
-}
-
-export async function DropSwing(actor) {
-  for (let element of actor.items) {
-    if (element.type === "color" && element.system.isSwing) {
-      await element.update({ "system.isSwing": false });
-    }
-  }
-  await actor.update({
-    "system.currentSwingValue": null,
-    "system.currentSwingColor": null,
-    "system.currentSwingName": "none",
-  });
 }

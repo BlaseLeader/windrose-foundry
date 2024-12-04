@@ -6,9 +6,9 @@ import { WindroseActorSheet } from "./sheets/actor-sheet.mjs";
 import { WindroseItemSheet } from "./sheets/item-sheet.mjs";
 // Import helper/utility classes and constants.
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
-import { BOILERPLATE } from "./helpers/config.mjs";
 import * as Swing from "./helpers/swing.mjs";
-import { TokenWindrose } from "./canvas/token.mjs"
+import { WindroseToken } from "./canvas/token.mjs";
+import { registerSystemSettings } from "./documents/settings.mjs";
 
 // import { Application, Assets, Sprite } from "pixi.js";
 
@@ -28,9 +28,6 @@ Hooks.once("init", async function () {
     rollItemMacro,
   };
 
-  // Add custom constants for configuration.
-  CONFIG.BOILERPLATE = BOILERPLATE;
-
   /**
    * Set an initiative formula for the system
    * @type {String}
@@ -43,18 +40,15 @@ Hooks.once("init", async function () {
   // Define custom Document classes
   CONFIG.Actor.documentClass = WindroseActor;
   CONFIG.Item.documentClass = WindroseItem;
-  CONFIG.Token.objectClass = TokenWindrose;
-  // TODO: Figure out how exactly to introduce Lancer Initiative module
-  // CONFIG.Combat.documentClass = CombatWindrose;
-  // CONFIG.LancerInitiative.module = 
-
-  // add_combat_interface(CombatWindrose)
+  CONFIG.Token.objectClass = WindroseToken;
 
   // Register sheet application classes
   Actors.unregisterSheet("core", ActorSheet);
   Actors.registerSheet("windrose", WindroseActorSheet, { makeDefault: true });
   Items.unregisterSheet("core", ItemSheet);
   Items.registerSheet("windrose", WindroseItemSheet, { makeDefault: true });
+
+  registerSystemSettings();
 
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();
@@ -169,75 +163,34 @@ Hooks.on("hoverToken", async (object, controlled) => {
   }
 });
 
-// Hooks.on("createToken", async (doc, options, userId) => {
-//   const textElement = new PIXI.Text();
-//   var swing = doc.actor.getSwing();
-//   if (swing) {
-//     Swing.setColoredSwing(
-//       doc,
-//       swing.system.swingValue,
-//       swing.system.hexColor,
-//       textElement
-//     );
-//   } else {
-//     Swing.setColorless(doc, textElement);
-//   }
-// });
-
-// Hooks.on("canvasReady", async (canvas) => {
-//   //loop through all tokens on canvas to update swings
-//   canvas.tokens.objects.children.forEach((token) => {
-//     let textElement = new PIXI.Text();
-//     let swing = token.actor.getSwing();
-
-//     //if character has an active swing, show it
-//     if (swing) {
-//       Swing.setColoredSwing(
-//         token.document,
-//         swing.system.swingValue,
-//         swing.system.hexColor,
-//         textElement
-//       );
-//     } else {
-//       Swing.setColorless(token.document, textElement);
-//     }
-//   });
-// });
-
-Hooks.on("updateActor", console.log)
-Hooks.on("updateActor", async (doc, change) => {
-  //get all tokens associated with the actor
+Hooks.on("updateActor", async (doc, change) => {  
   const tokens = doc.getActiveTokens();
 
-  if (change.system.currentSwingValue === undefined && change.system.currentSwingColor === undefined)
-  {
+  //if no changes to swing return
+  if (change.system.swing.id === undefined) {
     return;
   }
 
-  //loop through them and get their aura and swing, then assign them as appropriate
   for (let token of tokens) {
     var textElement = token.layer.getChildByName(token.id);
-    if (change.system.currentSwingValue || change.system.currentSwingColor) {
-      const swingVal = change.system.currentSwingValue
-        ? change.system.currentSwingValue
-        : doc.system.currentSwingValue;
-      const swingColor = change.system.currentSwingColor
-        ? change.system.currentSwingColor
-        : doc.system.currentSwingColor;
-      Swing.setColoredSwing(token.document, swingVal, swingColor, textElement);
+    const swing = token.actor.getSwing()
+    
+    if (change.system.swing.id !== null) {
+      Swing.setColoredSwingGraphic(token.document, swing.system.swingValue, swing.system.hexColor, textElement);
     } else {
-      Swing.setColorless(token.document, textElement);
+      Swing.setColorlessSwingGraphic(token.document, textElement);
     }
-  };
+  }
 });
 
 Hooks.on("updateToken", async (doc, updatedValues) => {
   var swingVal = doc.layer.getChildByName(doc.id);
   if (updatedValues.width || updatedValues.height) {
-    Swing.setColoredSwing(
+    const swing = doc.actor.getSwing()
+    Swing.setColoredSwingGraphic(
       doc,
-      doc.actor.system.currentSwingValue,
-      doc.actor.system.currentSwingColor,
+      swing.system.swingValue,
+      swing.system.hexColor,
       swingVal
     );
   }
@@ -252,9 +205,9 @@ Hooks.on("deleteToken", async (doc) => {
 
 // pulse roll
 Hooks.on("preUpdateCombat", async (doc, changes) => {
-  if (changes.round){ 
+  if (!!changes.round) {
     for (let combatant of doc.combatants) {
-      await Swing.DropSwing(combatant.actor);
+      await combatant.actor.dropSwing();
     }
 
     doc.combatants.forEach((combatant) => {
@@ -264,5 +217,22 @@ Hooks.on("preUpdateCombat", async (doc, changes) => {
         combatant.actor.sheet._onRollToDye(null, "gmroll", true);
       }
     });
+  }
+});
+
+Hooks.on("drawToken", async (token) => {
+  let textElement = new PIXI.Text();
+  const swing = token.actor.getSwing();
+  console.log(swing)
+
+  if (swing) {
+    Swing.setColoredSwingGraphic(
+      token.document,
+      swing.system.swingValue,
+      swing.system.hexColor,
+      textElement
+    );
+  } else {
+    Swing.setColorlessSwingGraphic(token.document, textElement);
   }
 });

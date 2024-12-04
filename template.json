@@ -14,15 +14,21 @@
           "max": 10
         },
         "biography": "",
+        "swing": {
+          "id": ""
+        },
         "currentSwingName":"",
         "currentSwingValue": null,
         "currentSwingColor": null,
-        "showLeveling":false,
-        "automatedMessaging":true,
         "globalDyeBonus":"",
         "globalDoBonus":"",
         "globalRecoverBonus":"",
-        "autoUnlock":true,        "autoHealRecover":true, "autoPulseRoll": true
+        "showLeveling":false,
+        "automatedMessaging":true,
+        "autoUnlock":true,        
+        "autoHealRecover":true, 
+        "autoPulseRoll": true,
+        "autoAuraSwing": true
       }
     },
     "character": {
