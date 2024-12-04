@@ -4,7 +4,7 @@
         <div class="colorblock-wide" style="background-color: {{swing.color}};">
             <div>{{d20Roll}}</div>
         </div>
-        <div class="colorblock-small inMessage {{#if swing.isSwing}}block-swing{{/if}}" title="{{swing.displayName}}" style="background-color: {{attColor}};">
+        <div class="colorblock-small inMessage {{#if swing.isSwing}}block-swing{{/if}}" title="{{swing.displayName}}" style="background-color: {{swing.color}};">
             <div>{{swing.value}}</div>
         </div>
         {{#if attributeBonusesPresent}}<div class="colorattribute" style="color:{{swing.color}}">+{{swing.attributeBonus}}</div>{{/if}}
