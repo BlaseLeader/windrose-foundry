@@ -223,7 +223,6 @@ Hooks.on("preUpdateCombat", async (doc, changes) => {
 Hooks.on("drawToken", async (token) => {
   let textElement = new PIXI.Text();
   const swing = token.actor.getSwing();
-  console.log(swing)
 
   if (swing) {
     Swing.setColoredSwingGraphic(

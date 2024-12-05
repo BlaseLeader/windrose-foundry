@@ -6,7 +6,6 @@ export const WILD_SWING = {
 };
 
 export function setColoredSwingGraphic(tokenDoc, swingVal, swingColor, textElement) {
-  console.log("setColoredSwing", tokenDoc, swingVal, swingColor, textElement)
   this.createSwingValue(tokenDoc, swingVal, swingColor, textElement);
 
   // otherwise users without permission will be constantly attempting to alter the token
@@ -46,7 +45,6 @@ export function createSwingValue(tokenDoc, swingVal, swingColor, textElement) {
   textElement.height = tokenDoc.object.h;
   textElement.resolution = 4;
 
-  console.log(textElement)
   tokenDoc.layer.addChild(textElement);
 }
 
