@@ -88,7 +88,6 @@ async function onSelectSwing(event) {
       ? parseInt(event.currentTarget.dataset.rollval) + 1
       : parseInt(event.currentTarget.dataset.rollval);
 
-  console.log("onSelectSwing", selectedColor, swingValue);
   await actor.setSwing(event.currentTarget.dataset.itemId, swingValue);
 
   let chatContent = "I locked in to " + selectedColor.system.displayName;
