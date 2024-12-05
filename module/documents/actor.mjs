@@ -1,3 +1,4 @@
+import { createChatRoll } from "../helpers/rolls.mjs";
 import { WILD_SWING } from "../helpers/swing.mjs";
 
 /**
@@ -175,6 +176,29 @@ export class WindroseActor extends Actor {
     return this.system.swing.id
       ? fromUuidSync(`Actor.${this.id}.Item.${this.system.swing.id}`)
       : null;
+  }
+
+  async pulseRoll() {
+    const { colors, total } = await this.rollToDye(0);
+    let cardData = {
+      colors,
+      ownerID: this.id,
+      tokenID: this.isToken ? this.token.id : "", //needed for NPCs picking up swing
+      bonuses: {
+        roll: 0,
+        string:""
+      },
+      unlockedADie: colors.locks.length > 0 && this.system.autoUnlock,
+      total,
+    };
+
+    let chatContent = await renderTemplate(
+      this.sheet.chatTemplate["rollToDye"],
+      cardData
+    );
+
+    createChatRoll(chatContent, this.actor);
+    return;
   }
 
   getActiveColors() {

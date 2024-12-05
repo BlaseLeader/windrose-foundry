@@ -212,9 +212,9 @@ Hooks.on("preUpdateCombat", async (doc, changes) => {
 
     doc.combatants.forEach((combatant) => {
       if (combatant.token.disposition === 1) {
-        combatant.actor.sheet._onRollToDye(null, null, true);
+        combatant.actor.pulseRoll();
       } else {
-        combatant.actor.sheet._onRollToDye(null, "gmroll", true);
+        combatant.actor.pulseRoll();
       }
     });
   }

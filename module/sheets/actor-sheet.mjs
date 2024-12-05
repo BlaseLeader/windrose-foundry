@@ -259,7 +259,7 @@ export class WindroseActorSheet extends ActorSheet {
     createChatRoll(
       `${this.actor.name} set their Swing to ${
         color.system.displayName ?? color.system.name
-      } [${swing}]`
+      } [${userInput.swing}]`
     );
     return;
   }
@@ -289,7 +289,7 @@ export class WindroseActorSheet extends ActorSheet {
             ? `+${userBonusesRoll.total}`
             : `-${userBonusesRoll.total}`,
       },
-      unlockedADie: colors.locks.length > 0 && actor.system.autoUnlock,
+      unlockedADie: colors.locks.length > 0 && this.actor.system.autoUnlock,
       total,
     };
 
